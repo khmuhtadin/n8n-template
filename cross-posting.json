@@ -1,0 +1,368 @@
+{
+  "name": "Buzzerin",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -340,
+        -200
+      ],
+      "id": "4aaec093-6d34-4810-b297-6f1204bf7b4f",
+      "name": "When chat message received",
+      "webhookId": "463358fb-2984-4e4f-be94-46a3e1365380"
+    },
+    {
+      "parameters": {
+        "text": "=test automation: \ninput: {{ $('When chat message received').item.json.chatInput }}\n\noutput: {{ $json.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        420,
+        -340
+      ],
+      "id": "88b9267d-f9a7-4cd1-98a5-1c61ca803996",
+      "name": "X",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "aqNCObySDN0ov1eG",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=test automation: \ninput: {{ $('When chat message received').item.json.chatInput }}\n\noutput: {{ $json.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        460,
+        0
+      ],
+      "id": "4f7e82f3-003c-4fdc-8ed6-6adaab7e9a13",
+      "name": "Discord",
+      "webhookId": "b00e2e50-81ad-4d96-8457-84d2518dc851",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "LLZlMnlqvhY0SVaL",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "50e6b6e3-dba7-4a9c-bd87-e70cddd17f8a",
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "Twitter",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Twitter"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "Discord",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0f14d2c8-74ab-4c19-8249-46d01fc9cbad"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Discord"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fae91576-c20a-47e2-b045-7bbc05e85f55",
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "LinkedIn",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "LinkedIn"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6f01c3d4-6d89-4223-9140-7fe2288e4375",
+                    "leftValue": "={{ $json.platform }}",
+                    "rightValue": "Linkedin",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Linkedin"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        220,
+        -80
+      ],
+      "id": "f418837e-a963-437b-9f11-7184b90c661a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Do as instructed!",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=you are a social media specialist, optimize this input ({{ $json.chatInput }}) for several platform like twitter, discord and linkedin\n\nthe main focus is to get viral!\n\ndetect the language input first. generate the output in the same language"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -120,
+        -200
+      ],
+      "id": "d1f3a884-bcbb-4035-a52f-36b167bf9fd8",
+      "name": "Topic Chooser and Title Maker"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-4-maverick:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -92,
+        20
+      ],
+      "id": "f56606cf-4fee-4037-8096-0083e6118f3e",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "DPrHlBN0s5WFDxi9",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  {\n    \"platform\": \"twitter\",\n    \"content\": \"tweet goes here\"\n  },\n  {\n    \"platform\": \"discord\",\n    \"content\": \"message goes here\"\n  }\n]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        28,
+        20
+      ],
+      "id": "158d2322-527c-402a-a26d-87f74004ba7a",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -320
+      ],
+      "id": "eee77d13-62cc-43b7-be0b-6fccc9f82647",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "person": "XkhxgLp6zG",
+        "text": "=test app buzzer LOL\ninput: {{ $('When chat message received').item.json.chatInput }}\n\noutput: {{ $json.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        460,
+        -180
+      ],
+      "id": "dc5f941f-5236-4aca-97ab-f619a3cb1a48",
+      "name": "LinkedIn",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "PTWnCdmDwxD5qWcc",
+          "name": "LinkedIn account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Topic Chooser and Title Maker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Topic Chooser and Title Maker": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Topic Chooser and Title Maker",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Topic Chooser and Title Maker",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "X",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d26038bf-a461-4590-bfae-09d87b9d6c47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "eSPsRuvDjDKmvlRD",
+  "tags": []
+}
