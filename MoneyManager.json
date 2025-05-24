@@ -1,0 +1,761 @@
+{
+  "name": "MoneyManager",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const binaryData = $input.first().binary.data;\n\n// Access buffer property and convert to base64\nconst base64Image = binaryData.data.toString('base64');\n\nreturn [{ json: { base64Image: base64Image } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -160
+      ],
+      "id": "22b34ee6-46f9-4b5c-9148-29e4d5b2d0e9",
+      "name": "Convert to Base64"
+    },
+    {
+      "parameters": {
+        "content": "Converts the downloaded receipt image to base64 format for processing by Google Vision API.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -260
+      ],
+      "id": "227a8ed1-7546-46f9-ac09-00fba1be2085",
+      "name": "Sticky - Convert to Base64"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data from Parser node\nconst inputData = $input.all()[0].json.output || {};\n\n// Default values if data is incomplete\nconst store = inputData.store || { store_name: 'not available', store_location: 'not available' };\nconst transaction = inputData.transaction || { date: 'not available', time: 'not available' };\nconst items = inputData.items || [];\nconst summary = inputData.summary || { total: 'not available', payment_method: 'not available', expense_category: 'not available' };\n\n// Create message with available information\nlet message = '';\n\nif (store.store_name !== 'not available') {\n  message += `📋 Store: ${store.store_name}\\n`;\n}\nif (store.store_location !== 'not available') {\n  message += `📍 Location: ${store.store_location}\\n`;\n}\nif (transaction.date !== 'not available' || transaction.time !== 'not available') {\n  message += `📅 Date: ${transaction.date} ${transaction.time}\\n`;\n}\n\nif (items.length > 0) {\n  message += `\\n🛒 Items:\\n`;\n  items.forEach(item => {\n    message += `- ${item.description || 'not available'}: ${item.total_price || 'not available'}\\n`;\n  });\n}\n\nif (summary.total !== 'not available') {\n  if (parseFloat(summary.total) === 0) {\n    message = 'Looks like an input error, total is 0? Did you get this for free? Please check again.';\n  } else {\n    message += `\\n💸 Total: Rp ${summary.total}\\n`;\n  }\n}\n\nif (summary.expense_category !== 'not available' && parseFloat(summary.total) !== 0) {\n  message += `📌 Category: ${summary.expense_category}\\n`;\n}\n\n// Default message if no information is available\nif (!message) {\n  message = 'No information available from the input.';\n}\n\n// Return message as output\nreturn [\n  {\n    json: {\n      message: message\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        200
+      ],
+      "id": "e0474a11-3638-416f-9098-cdad34b22e55",
+      "name": "Format Summary Message"
+    },
+    {
+      "parameters": {
+        "content": "Formats the parsed receipt data into a user-friendly message with emojis, including store, date, items, total, and expense category.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        20,
+        80
+      ],
+      "id": "3408f8f5-0926-46f7-b408-b4963f8144fc",
+      "name": "Sticky - Format Summary Message"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $credentials.motun8nmoney }}/getFile?file_id={{ $json.message.photo[3].file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -600,
+        -160
+      ],
+      "id": "b743e384-c29a-488e-9aa0-22346e6b36ec",
+      "name": "Get Telegram File"
+    },
+    {
+      "parameters": {
+        "content": "Retrieves the file ID of the uploaded receipt photo from Telegram for downloading.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        -260
+      ],
+      "id": "dffb83b7-230b-4ae8-a300-d63d74d56ade",
+      "name": "Sticky - Get Telegram File"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot{{ $credentials.telegramApi.token }}/{{ $node['Get Telegram File'].json['result']['file_path'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -340,
+        -160
+      ],
+      "id": "9e909c6d-2e4a-4316-bde6-e8dd25ff7447",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "content": "Downloads the receipt image from Telegram and converts it to binary format for further processing.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        -260
+      ],
+      "id": "e63ce8e1-087f-4ad8-8e0d-c2b5ec5bd667",
+      "name": "Sticky - Download Image"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vision.googleapis.com/v1/images:annotate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": [\n    {\n      \"image\": {\n        \"content\": \"{{ $json.base64Image }}\"\n      },\n      \"features\": [\n        {\n          \"type\": \"TEXT_DETECTION\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        -160
+      ],
+      "id": "a75252bb-254a-4753-94e7-6e2d5f725973",
+      "name": "Google Vision OCR",
+      "credentials": {
+        "googleApi": {
+          "id": "JFlN4bjPJEAtYjSy",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Uses Google Vision API to extract text from the receipt image via OCR (Optical Character Recognition).",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        -260
+      ],
+      "id": "1fb11ade-f362-4d7c-9e21-0f2a2bed3238",
+      "name": "Sticky - Google Vision OCR"
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!$json.responses || $json.responses.length === 0) {\n  return [{ json: { error: 'No OCR data found' } }];\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        -160
+      ],
+      "id": "148cbb0c-8c8d-4d5f-85eb-2425c89f2550",
+      "name": "Check OCR Result"
+    },
+    {
+      "parameters": {
+        "content": "Checks if Google Vision OCR returned valid data; if not, outputs an error message.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        440,
+        -260
+      ],
+      "id": "d7e00418-9e0e-49f3-9abe-65526f4b63eb",
+      "name": "Sticky - Check OCR Result"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "864bbf7f-3a69-44fa-a905-d18b11bd6535",
+              "name": "message",
+              "value": "={{ $json.responses[0].textAnnotations[0].description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        700,
+        -160
+      ],
+      "id": "34271d96-19ce-489f-a3e8-ff10d0ff2e3c",
+      "name": "Extract OCR Text"
+    },
+    {
+      "parameters": {
+        "content": "Extracts the raw text from Google Vision OCR output for further processing.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        700,
+        -260
+      ],
+      "id": "2344bd2b-2b5c-40a5-a7d7-f83a30ec252b",
+      "name": "Sticky - Extract OCR Text"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        0
+      ],
+      "id": "46e29d73-00d7-46d1-87c8-57506522df35",
+      "name": "Telegram Trigger",
+      "webhookId": "0b3d46ac-c095-435c-97b3-7608e0370594",
+      "credentials": {
+        "telegramApi": {
+          "id": "UAvyFVvuZ3qtAjBR",
+          "name": "motun8nmoney"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Receives text or photo input from Telegram to initiate the expense tracking process.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        -100
+      ],
+      "id": "a5fc72c2-930b-4826-8381-6916b16ede9a",
+      "name": "Sticky - Telegram Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a financial planner expert with a robust parser algorithm. Category options are:\n- Income\n- Expense\n\nExpense options are:\n- Food & Beverages\n- Household\n- Transport\n\nInput may be in English, or Bahasa Indonesia. Always generate output in Input Language.\n\nAnalyze the input. If no expenses or income detected, return 'not found' and 0 for the total. If date is not specified, use {{ $('Telegram Trigger').item.json.message.date}}. For relative dates (e.g., yesterday, tomorrow), use {{ $('Telegram Trigger').item.json.message.date}} as the base. Example: yesterday is {{ $('Telegram Trigger').item.json.message.date}} - 1."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -280,
+        200
+      ],
+      "id": "ac2601b3-ea25-487c-88e6-629d811d5d67",
+      "name": "AI Categorizer"
+    },
+    {
+      "parameters": {
+        "content": "Uses OpenRouter AI to analyze and categorize receipt data, converting currencies and handling relative dates as needed.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        80
+      ],
+      "id": "b1ecac7b-00e6-4aac-a6ff-af5ef337ba0e",
+      "name": "Sticky - AI Categorizer"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\nConfigures the OpenRouter AI model to parse and categorize receipt data based on the input prompt.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        460
+      ],
+      "id": "96ec9601-8905-475e-9610-9d4161f705da",
+      "name": "Sticky - OpenRouter AI Model"
+    },
+    {
+      "parameters": {
+        "content": "Sends an error message to Telegram if the input results in a zero total or other issues.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        620,
+        80
+      ],
+      "id": "ac82e39a-f058-4cbc-bf4f-3bcd58ab241f",
+      "name": "Sticky - Send Error Message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8408eb5-502b-48bf-b85d-3cea897f60b9",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Looks like an input error, total is 0? Did you get this for free? Please check again.",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        200
+      ],
+      "id": "592e810a-0d3f-4686-aef4-dc8b1059b298",
+      "name": "Check Invalid Input"
+    },
+    {
+      "parameters": {
+        "content": "Checks if the formatted message indicates an invalid input (e.g., zero total) and routes to the appropriate Telegram response.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        300,
+        80
+      ],
+      "id": "a99676e6-412a-4e4c-8e88-6c032a9ff82f",
+      "name": "Sticky - Check Invalid Input"
+    },
+    {
+      "parameters": {
+        "content": "Sends the formatted expense summary to the user’s Telegram chat.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        620,
+        360
+      ],
+      "id": "51d6ff13-5503-4b87-b721-c6b26963dc75",
+      "name": "Sticky - Send Expense Summary"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aa52b49e-1087-4623-83cb-905500c36d3c",
+              "name": "message",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -600,
+        200
+      ],
+      "id": "a2e554a0-0a01-4f7f-aa17-ff074d07e2c8",
+      "name": "Extract Text Input"
+    },
+    {
+      "parameters": {
+        "content": "Extracts text input from Telegram messages for processing when no image is provided.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        80
+      ],
+      "id": "117d48df-9b18-4a44-a3f0-663ee69f7b2f",
+      "name": "Sticky - Extract Text Input"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\nParses AI output into a structured JSON format with store, transaction, items, and summary details.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        460
+      ],
+      "id": "b2434fd9-18c3-4be0-a072-9e7c9ea4b7fe",
+      "name": "Sticky - Parse Receipt Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c5999c0e-853d-45e6-bec6-f446defe909d",
+              "leftValue": "={{ $json.message.photo }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -900,
+        0
+      ],
+      "id": "291dbc64-bc27-4df5-bbb4-77086bbcf5e2",
+      "name": "Check for Image"
+    },
+    {
+      "parameters": {
+        "content": "Checks if the Telegram input contains a photo; routes to image processing or text processing accordingly.",
+        "color": "#FF0000"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -100
+      ],
+      "id": "c4b8c112-950e-4ff7-8ab6-c10ae50e3e7d",
+      "name": "Sticky - Check for Image"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"store\": {\n    \"store_name\": \"Store A\",\n    \"store_location\": \"Store location\"\n  },\n  \"transaction\": {\n    \"date\": \"Transaction date\",\n    \"time\": \"Transaction time\",\n    \"receipt_number\": \"Receipt number\"\n  },\n  \"items\": [\n    {\n      \"description\": \"Item name\",\n      \"quantity\": \"Quantity\",\n      \"unit_price\": \"Unit price\",\n      \"total_price\": \"Item total price\"\n    }\n  ],\n  \"summary\": {\n    \"total\": \"Total (number)\",\n    \"payment_method\": \"Payment method\",\n    \"expense_category\": \"Household\"\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -120,
+        380
+      ],
+      "id": "298b41c8-a5e7-4f67-b73f-771a73163f87",
+      "name": "Receipt Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        380
+      ],
+      "id": "d3e1db34-1c3f-43b4-9882-1f74971573a2",
+      "name": "AI Analyzer",
+      "credentials": {
+        "openRouterApi": {
+          "id": "DPrHlBN0s5WFDxi9",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=hello  {{ $('Telegram Trigger').item.json.message.from.first_name }}\n\n{{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        180
+      ],
+      "id": "b970b072-3d85-4ee9-94c9-0c7c3428f7ca",
+      "name": "Send Error Message",
+      "webhookId": "9c4dad82-3746-4abf-97be-d6938783539b",
+      "credentials": {
+        "telegramApi": {
+          "id": "UAvyFVvuZ3qtAjBR",
+          "name": "motun8nmoney"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=hello  {{ $('Telegram Trigger').item.json.message.from.first_name }}\n\nIni Rekap Belanjamu\n{{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        460
+      ],
+      "id": "bd3450d9-d436-4d77-9636-68ab57d81013",
+      "name": "Send Expense Summary",
+      "webhookId": "9c4dad82-3746-4abf-97be-d6938783539b",
+      "credentials": {
+        "telegramApi": {
+          "id": "UAvyFVvuZ3qtAjBR",
+          "name": "motun8nmoney"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "**MoneyMate is free to use!** Got feedback, ideas, or just wanna chat? Find me at [khmuhtadin.com](https://khmuhtadin.com).  \n\nWanna buy me a coffee to fuel more workflows? Head to [buymeacoffee.com/khmuhtadin](https://buymeacoffee.com/khmuhtadin)! ☕",
+        "width": 300,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        140,
+        460
+      ],
+      "id": "b36eb369-b018-474c-9531-a4b9ddf56f1c",
+      "name": "Sticky - Parse Receipt Data1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Convert to Base64": {
+      "main": [
+        [
+          {
+            "node": "Google Vision OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary Message": {
+      "main": [
+        [
+          {
+            "node": "Check Invalid Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Telegram File": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Convert to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vision OCR": {
+      "main": [
+        [
+          {
+            "node": "Check OCR Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check OCR Result": {
+      "main": [
+        [
+          {
+            "node": "Extract OCR Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract OCR Text": {
+      "main": [
+        [
+          {
+            "node": "AI Categorizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check for Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Categorizer": {
+      "main": [
+        [
+          {
+            "node": "Format Summary Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Invalid Input": {
+      "main": [
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Expense Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text Input": {
+      "main": [
+        [
+          {
+            "node": "AI Categorizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Image": {
+      "main": [
+        [
+          {
+            "node": "Get Telegram File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Text Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Categorizer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analyzer": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Categorizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "52f885a4-7246-498b-974d-f9400c736240",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "au6oRPyhJfdNrqG2",
+  "tags": []
+}

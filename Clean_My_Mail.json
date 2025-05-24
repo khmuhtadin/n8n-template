@@ -1,0 +1,324 @@
+{
+  "name": "Clean My Mail",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{ $json.id }}"
+      },
+      "name": "Delete All Mails",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        320,
+        500
+      ],
+      "typeVersion": 2.1,
+      "id": "8a921410-15a0-4b0e-9104-19ffa1dd51d0",
+      "webhookId": "b1e6a886-f0ae-479a-a25c-37a6bd9b6c65",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8p11S7abjY8KddB9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📧 Gmail Setup\n1. Make sure all Gmail nodes use valid and connected Gmail OAuth2 credentials.\n2. To delete different email categories, adjust the labels in each Gmail node:\n   - 'Get all SPAM emails' → label: SPAM\n   - 'Get all Social' → label: CATEGORY_SOCIAL\n   - 'Get all Promotions' → label: CATEGORY_PROMOTIONS\n",
+        "height": 740,
+        "width": 500
+      },
+      "name": "Adjustments",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -740,
+        120
+      ],
+      "typeVersion": 1,
+      "id": "0b0fe192-6ead-4011-b469-79da8f8033ff"
+    },
+    {
+      "parameters": {
+        "content": "## ⏰ Scheduled Trigger\n- This workflow runs automatically every 3 days.\n- You can change the interval in the \"Trigger Every Three Days\" node to suit your needs.\n",
+        "height": 240,
+        "width": 360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1220,
+        360
+      ],
+      "id": "b4e2ca40-3850-478f-b78d-b6814353a68a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 🔀 Merge & Prepare IDs\n- The \"Merge\" node combines results from all three Gmail nodes (SPAM, Social, Promotions).\n- \"Split Out\" node splits the list so each email ID can be processed individually.\n",
+        "height": 240,
+        "width": 420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        360
+      ],
+      "id": "25bb2611-3188-478b-ac6d-23ed621b4d50",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 🗑️ Delete Emails\n- The \"Delete All Mails\" node deletes emails using their message IDs.\n- Double-check the labels in earlier steps to avoid accidentally deleting important emails.\n",
+        "height": 240,
+        "width": 420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        300,
+        360
+      ],
+      "id": "1393ff41-bafd-437c-877f-be9e62c109c0",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 3
+            }
+          ]
+        }
+      },
+      "name": "Run Every 3 Days (Trigger)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -960,
+        500
+      ],
+      "typeVersion": 1.2,
+      "id": "cbbbaf18-29e4-4a97-8614-3dfeeced42a7"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "labelIds": [
+            "SPAM"
+          ]
+        }
+      },
+      "name": "Fetch SPAM Emails",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        -540,
+        320
+      ],
+      "typeVersion": 2.1,
+      "alwaysOutputData": true,
+      "id": "ecc3647d-f81c-4605-8f66-2a47d20b7dde",
+      "webhookId": "ab59faf5-0db2-4bd3-ac09-e59b5ef77a11",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8p11S7abjY8KddB9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "labelIds": [
+            "CATEGORY_SOCIAL"
+          ]
+        }
+      },
+      "name": "Fetch Social Emails",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        -540,
+        500
+      ],
+      "typeVersion": 2.1,
+      "alwaysOutputData": true,
+      "id": "4a288d12-0fb4-44aa-9c41-242cae4f5dd6",
+      "webhookId": "1ad90798-b252-4856-af51-744b645e2725",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8p11S7abjY8KddB9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "labelIds": [
+            "CATEGORY_PROMOTIONS"
+          ]
+        }
+      },
+      "name": "Fetch Promotion Emails",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        -540,
+        680
+      ],
+      "typeVersion": 2.1,
+      "alwaysOutputData": true,
+      "id": "f65f55af-3374-42fd-98fe-2cfd543077a5",
+      "webhookId": "0f24dcf5-dc5e-4395-a9ec-d0c17dbfeac0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8p11S7abjY8KddB9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -160,
+        500
+      ],
+      "id": "5b1f0245-960c-4c38-a3c9-8545f7838836",
+      "name": "Combine All Fetched Emails"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        40,
+        500
+      ],
+      "id": "f97101f1-592e-4295-b3f1-a632a5a15551",
+      "name": "Split Email IDs (One per item)"
+    },
+    {
+      "parameters": {
+        "content": "## ☕ Hey, this tool is totally free!\n\nIf you have any suggestions, feedback, or just wanna say hi — feel free to[reach out](https://khmuhtadin.com).\n\nWanna support my caffeine needs? [Buy me a coffee](https://buymeacoffee.com/khmuhtadin) ☕❤️\n\nThanks & happy automating!\n",
+        "height": 240,
+        "width": 420,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        700
+      ],
+      "id": "8d354e0a-0d21-4446-8b58-3d86eb5fbc8d",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Delete All Mails": {
+      "main": [
+        []
+      ]
+    },
+    "Run Every 3 Days (Trigger)": {
+      "main": [
+        [
+          {
+            "node": "Fetch SPAM Emails",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Social Emails",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Promotion Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch SPAM Emails": {
+      "main": [
+        [
+          {
+            "node": "Combine All Fetched Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Social Emails": {
+      "main": [
+        [
+          {
+            "node": "Combine All Fetched Emails",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Fetch Promotion Emails": {
+      "main": [
+        [
+          {
+            "node": "Combine All Fetched Emails",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Combine All Fetched Emails": {
+      "main": [
+        [
+          {
+            "node": "Split Email IDs (One per item)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Email IDs (One per item)": {
+      "main": [
+        [
+          {
+            "node": "Delete All Mails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "34278343-eec2-4602-90f8-60d4cfa3bc3f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "dI8MDIAVRPRIMA9K",
+  "tags": []
+}
