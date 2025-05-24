@@ -7,30 +7,24 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        100,
-        200
-      ],
+      "position": [100, 200],
       "id": "ecd439fe-ccbb-4653-9880-165a6f69426b",
       "name": "Format Summary Message"
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/bot7757633512:AAGoRPnKmcdWclvSF7ObJGUNvGZNWCqdP5M/getFile?file_id={{ $json.message.photo[3].file_id }}",
+        "url": "=https://api.telegram.org/bot{{ $credentials.yourbottoken }}/getFile?file_id={{ $json.message.photo[3].file_id }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -600,
-        -180
-      ],
+      "position": [-600, -180],
       "id": "14a47f09-075d-47c6-a56f-8b44b2079e6e",
       "name": "Get Telegram File"
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/file/bot7757633512:AAGoRPnKmcdWclvSF7ObJGUNvGZNWCqdP5M/{{ $node['Get Telegram File'].json['result']['file_path'] }}",
+        "url": "=https://api.telegram.org/file/bot{{ $credentials.yourbottoken }}/{{ $node['Get Telegram File'].json['result']['file_path'] }}",
         "options": {
           "response": {
             "response": {
@@ -41,26 +35,18 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -300,
-        -180
-      ],
+      "position": [-300, -180],
       "id": "8f50e858-6cbc-4999-bf27-6253fc0fcd41",
       "name": "Download Image"
     },
     {
       "parameters": {
-        "updates": [
-          "message"
-        ],
+        "updates": ["message"],
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
-      "position": [
-        -1280,
-        0
-      ],
+      "position": [-1280, 0],
       "id": "45b7b3c5-c6d4-45b6-8806-a0804b6a6551",
       "name": "Telegram Trigger",
       "webhookId": "ebc04a7c-be96-4fba-a781-8efe01f447b2",
@@ -80,10 +66,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -1280,
-        -140
-      ],
+      "position": [-1280, -140],
       "id": "721e7f94-27a4-4d93-b362-aa449e8404a9",
       "name": "Sticky - Telegram Trigger"
     },
@@ -102,10 +85,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.6,
-      "position": [
-        -200,
-        200
-      ],
+      "position": [-200, 200],
       "id": "563a242d-fe74-4d42-9a72-79cb2945acc9",
       "name": "AI Categorizer"
     },
@@ -136,10 +116,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        380,
-        200
-      ],
+      "position": [380, 200],
       "id": "b8db4655-b419-424f-b5e9-2111d5831507",
       "name": "Check Invalid Input"
     },
@@ -159,10 +136,7 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        -600,
-        200
-      ],
+      "position": [-600, 200],
       "id": "47efaf2d-23e9-43d9-bf82-1fa32b5e76fb",
       "name": "Extract Text Input"
     },
@@ -194,10 +168,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -980,
-        0
-      ],
+      "position": [-980, 0],
       "id": "490fe4dc-5456-4f08-ace7-8ee9f4bc87fb",
       "name": "Check for Image"
     },
@@ -209,10 +180,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -980,
-        -140
-      ],
+      "position": [-980, -140],
       "id": "970fe327-8b82-4d8c-9f81-b38deb768dd1",
       "name": "Sticky - Check for Image"
     },
@@ -222,10 +190,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
-      "position": [
-        -40,
-        380
-      ],
+      "position": [-40, 380],
       "id": "de5ac510-d757-449e-92cf-ad22976bf06d",
       "name": "Receipt Parser"
     },
@@ -235,10 +200,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
-      "position": [
-        -200,
-        380
-      ],
+      "position": [-200, 380],
       "id": "a2b4ffb7-abe8-4298-abee-8d14390ad242",
       "name": "AI Analyzer",
       "credentials": {
@@ -256,10 +218,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        700,
-        180
-      ],
+      "position": [700, 180],
       "id": "aa36fb3b-fc38-419d-b520-7fd5cc474697",
       "name": "Send Error Message",
       "webhookId": "6fbaf25f-b6dd-44c8-bce9-49159dfc1757",
@@ -278,10 +237,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        700,
-        460
-      ],
+      "position": [700, 460],
       "id": "e1e9ecb9-c40f-4031-8d40-01ce7fb01ddc",
       "name": "Send Expense Summary",
       "webhookId": "05642f0e-27a5-4234-a101-dacc75bbb470",
@@ -301,10 +257,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        680,
-        -300
-      ],
+      "position": [680, -300],
       "id": "d416dcad-b156-40c7-a0de-e46b268dd878",
       "name": "Sticky - Parse Receipt Data1"
     },
@@ -314,10 +267,7 @@
       },
       "type": "n8n-nodes-tesseractjs.tesseractNode",
       "typeVersion": 1,
-      "position": [
-        20,
-        -180
-      ],
+      "position": [20, -180],
       "id": "958bcce1-d9a2-4318-b6fd-47351631af7d",
       "name": "Extract Value From Image"
     },
@@ -329,10 +279,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        700,
-        360
-      ],
+      "position": [700, 360],
       "id": "bf5e529b-f6a7-433c-bf91-1d6d55542766",
       "name": "Sticky - Send Expense Summary1"
     },
@@ -344,10 +291,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -600,
-        100
-      ],
+      "position": [-600, 100],
       "id": "482b1aca-67ff-4c5c-8201-35799a032990",
       "name": "Sticky - Extract Text Input1"
     },
@@ -359,10 +303,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -60,
-        500
-      ],
+      "position": [-60, 500],
       "id": "3a0e917f-acae-48ca-93ee-bc48b94c61e6",
       "name": "Sticky - Parse Receipt Data2"
     },
@@ -374,10 +315,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -600,
-        -280
-      ],
+      "position": [-600, -280],
       "id": "4dc34baf-b732-47c2-932f-be2e67752cf2",
       "name": "Sticky - Get Telegram File1"
     },
@@ -389,10 +327,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -300,
-        -280
-      ],
+      "position": [-300, -280],
       "id": "62a9671e-ad05-40c3-9538-e0d5485c7978",
       "name": "Sticky - Download Image2"
     },
@@ -404,10 +339,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        0,
-        -280
-      ],
+      "position": [0, -280],
       "id": "a4a22a9f-8035-4508-a0b6-b5e2cf95d309",
       "name": "Sticky - Download Image3"
     },
@@ -419,10 +351,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        100,
-        80
-      ],
+      "position": [100, 80],
       "id": "c0e74e58-1e17-4ffd-8c01-870e8b750054",
       "name": "Sticky - Format Summary Message1"
     },
@@ -434,10 +363,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -200,
-        80
-      ],
+      "position": [-200, 80],
       "id": "f5ec65f1-738b-42a2-9114-7b1c694887d1",
       "name": "Sticky - AI Categorizer1"
     },
@@ -449,10 +375,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        700,
-        80
-      ],
+      "position": [700, 80],
       "id": "5758b4fc-34ce-4451-a328-71528995b28c",
       "name": "Sticky - Send Error Message1"
     },
@@ -464,10 +387,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        380,
-        80
-      ],
+      "position": [380, 80],
       "id": "d945a2b3-7c41-41fe-9d89-72f69a42229d",
       "name": "Sticky - Check Invalid Input1"
     },
@@ -479,10 +399,7 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -400,
-        500
-      ],
+      "position": [-400, 500],
       "id": "101e18a0-1949-41f8-9826-dc2b5f1a2984",
       "name": "Sticky - OpenRouter AI Model1"
     }
