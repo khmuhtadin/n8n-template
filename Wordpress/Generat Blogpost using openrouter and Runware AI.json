@@ -1,0 +1,557 @@
+{
+  "name": "WP - RunwareX",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Do as instructed!",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an expert SEO blog writer for “Dax AI,” specializing in Technology and Artificial Intelligence content. For each request, you must:\n\n1. Randomly select one category (exactly as shown):\n   – Technology\n   – Artificial Intelligence (AI)\n   – Tech Fact\n   – Tech History\n   – Tech Tips\n\n2. Create:\n   • A unique, non-robotic article title (no colons “:”, clickbait is OK but don’t exaggerate).  \n   • A URL-friendly slug (lowercase, hyphens).  \n   • A focus keyphrase (max 2 words, capturing the main idea).  \n   • A meta description (≤160 characters, summarizing the article).\n\n3. Rarely Use the current year placeholder {{ $json.Year }} if needed in the title. this year is 2025.\n\nOutput exactly in this format:\nCategory: <chosen category>\nTitle: <your title>\nSlug: <your-slug>\nFocus Keyphrase: <max 2 words>\nMeta Description: <≤160 characters>"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        320,
+        -320
+      ],
+      "id": "78fe837f-9a2a-4705-8db1-72506ed707ca",
+      "name": "Topic Chooser and Title Maker",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "## Setup Instructions\nTo use this workflow, set up the following credentials in n8n:\n\n- WordPress API: Provide the URL, username, and password for your WordPress site.\n- OpenAI API: Provide your OpenAI API key.\n- OpenRouter API: Provide your OpenRouter API key.\n- Discord Webhook: Create a webhook in your Discord server and provide the URL.\n- Telegram API: Provide the token for your Telegram bot.\n\nn8n will prompt you to install any missing nodes upon import.\n\n",
+        "height": 280,
+        "width": 620
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -120
+      ],
+      "id": "aa9feaad-374b-4b46-adc7-62c2a60c4834",
+      "name": "⚙️ Setup Guide"
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 BlogBlitz: Auto Blog Creator & Publisher\nThis n8n workflow automates end-to-end blog publishing:\n\n1. 🔁 **Triggers** every 3 hours or on-demand via Telegram.\n2. 🧠 **Generates** title, category, slug, keyphrase, meta.\n3. ✍️ **Writes** a 1,500–2,500-word SEO-rich article.\n4. 🖼️ **Creates** a realistic featured image.\n5. 🚀 **Publishes** the post to WordPress.\n6. 📣 **Notifies** Discord & Telegram with the link.",
+        "height": 260,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -280
+      ],
+      "id": "8c9205bc-175b-43fc-b0c9-9425284bfece",
+      "name": "🧠 Overview - What This Workflow Does"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=Published!\n{{ $json.link }}",
+        "options": {},
+        "embeds": {
+          "values": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        80
+      ],
+      "id": "4c96794c-1fa8-460c-96a1-33c9a7a915ef",
+      "name": "Notify Discord channel",
+      "webhookId": "b2d25b00-004e-4713-9f08-0c376f11a455",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "LLZlMnlqvhY0SVaL",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://<your-web-url>/wp-json/wp/v2/posts/{{ $('Create WP Draft Post').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "featured_media",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        80
+      ],
+      "id": "5dd2f9e2-b795-488d-9cb1-629b6261d91e",
+      "name": "Attach Feature Image to Post",
+      "credentials": {
+        "wordpressApi": {
+          "id": "gGfRrkCtaoISRmDr",
+          "name": "WP - Cartilo (Dax AI)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        840,
+        -120
+      ],
+      "id": "a9890fd4-0331-4e75-a97d-02daea36869c",
+      "name": "Article Generator (alt)",
+      "credentials": {
+        "openAiApi": {
+          "id": "xgxbqurhU1VXjSge",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro-exp-03-25",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -120
+      ],
+      "id": "cae81051-6f3e-4792-b13c-657f720c03e2",
+      "name": "Article Generator (alt2)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7ZkDDnjsiPRXf6eh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-4-maverick:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        680,
+        -120
+      ],
+      "id": "0c2ad461-814e-47db-bb5e-5b02778175a7",
+      "name": "Article Generator",
+      "credentials": {
+        "openRouterApi": {
+          "id": "DPrHlBN0s5WFDxi9",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a comprehensive, 1,500–3,500-word article using the following inputs:\n\n• Title: {{ $json.output.title }}\n• Category: {{ $json.output.category }}\n• Focus Phrase: {{ $json.output.focus_phrase }}\n\nRequirements:\n\nTitle:\n  – Craft an engaging title that includes the focus phrase.\n  - Do not add title in the body\n\nIntroduction (100–150 words)\n  - Dont use word \"Introduction\"\n  – Hook the reader.\n  – Include the focus phrase.\n\nBody Structure\n  - Do Not Add Title In the body\n  – Use 4–6 H2 subheadings, with 1–2 H3s beneath each as needed.\n  – Ensure the focus phrase appears in at least one H2 or H3.\n  – Sprinkle the focus phrase naturally throughout—minimum 4 times, maximum 16 times.\n  – Use bullet lists, examples, data or quotes to illustrate key points.\n  - add outbound link if available\n\nTone & Style\n  – Friendly yet authoritative.\n  – Clear, concise paragraphs (2–4 sentences each).\n  – Smooth transitions and varied sentence structure.\n\nConclusion & Call to Action\n  - Don't use starting \"Conclusion\"\n  – Summarize the key takeaways.\n  – End with a compelling call to action or next step.\n  - add available to contact cta (\"khmuhtadin.com\")\n\nEnsure flawless grammar, optimal keyword density, and readability for a general audience.\nNEVER PUT META DESCRIPTION IN BODY",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an elite blog writer for Dax AI, tasked with producing highly valuable, SEO-optimized, audience-focused long-form articles suitable for direct publication in WordPress. When given a topic or title, follow these rules precisely:\n\n1. Content Focus\n  - Deliver practical tips, clear strategies, in-depth insights or step-by-step guides directly related to the topic.\n  - Prioritize original, actionable advice that readers can implement immediately.\n\n2. Article Length & Structure\n  - length 1,500 - 3000 words.\n  - Use clear hierarchical headings (H2, H3, H4) to organize sections and subsections.\n  - Ensure each section flows logically, with introductions, transitions, and conclusions where appropriate.\n\n3. SEO Optimization\n  - Make content scannable: use short paragraphs, subheadings, and bulleted or numbered lists.\n  - Naturally incorporate relevant keywords without keyword stuffing.\n  - Write an engaging, concise meta description (under 160 characters) at the top.\n\n4. WordPress-Compatible Formatting\n  - Output plain text only—no Markdown, no code fences, no additional commentary.\n  - Format headings as WordPress recognizes (e.g., “<h2>Section Title</h2>” or using the WordPress editor’s native heading styles).\n  - For lists, use a simple dash or number followed by a space (e.g., “– Android Automation Apps:” or “1. Step one”) never make it bols (e.g., \"- **product 1**\").\n  - Do not include the article title, any author bylines, or any formatting instructions—only the body content.\n\n5. Final Output\n  – Only the article body in ready-to-publish WordPress format.\n  – No extra notes, disclaimers, or explanations.\n  – Confirm compliance by immediately starting with the first section heading when writing.\n  - NEVER PUT META DESCRIPTION IN BODY\n"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        640,
+        -320
+      ],
+      "id": "f8f84666-0d86-4f81-983e-d913c1eef969",
+      "name": "Generate Article Body",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        340,
+        -120
+      ],
+      "id": "a9d3b0e2-0e42-4226-a392-726012101642",
+      "name": "ALT: Metadata Generator (Gemini)",
+      "credentials": {
+        "openRouterApi": {
+          "id": "DPrHlBN0s5WFDxi9",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"category\": \"Technology\",\n\t\"title\": \"Article Title\",\n    \"slug\": \"article-slug\",\n\t\"focus_phrase\": \"focus phrase for SEO\",\n\t\"meta_description\": \"meta description under 160 characters\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        -120
+      ],
+      "id": "1a9c97fe-58cc-4d67-89ee-7101d075011c",
+      "name": "Parse Blog Metadata JSON"
+    },
+    {
+      "parameters": {
+        "title": "={{ $('Topic Chooser and Title Maker').item.json.output.title }}",
+        "additionalFields": {
+          "authorId": 1,
+          "content": "={{ $json.text }}",
+          "slug": "={{ $('Topic Chooser and Title Maker').item.json.output.slug }}",
+          "status": "publish",
+          "format": "standard",
+          "categories": "={{ $('Topic Chooser and Title Maker').item.json.output.category == \"Technology\" ? [3] :\n    $('Topic Chooser and Title Maker').item.json.output.category == \"Artificial Intelligence (AI)\" ? [4] :\n    $('Topic Chooser and Title Maker').item.json.output.category == \"Tech Fact\" ? [7] :\n    $('Topic Chooser and Title Maker').item.json.output.category == \"Tech History\" ? [8] :\n    $('Topic Chooser and Title Maker').item.json.output.category == \"Tech Tips\" ? [9] : [1] }}"
+        }
+      },
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [
+        340,
+        80
+      ],
+      "id": "ff0f88eb-2b9e-44d9-af2e-e1d9bdf7e308",
+      "name": "Create WP Draft Post",
+      "credentials": {
+        "wordpressApi": {
+          "id": "gGfRrkCtaoISRmDr",
+          "name": "WP - Cartilo (Dax AI)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://<your-web-url>/wp-json/wp/v2/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "image/webp"
+            },
+            {
+              "name": "Content-Disposition",
+              "value": "=attachment; filename={{$now.toMillis()}}.webp"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        80
+      ],
+      "id": "e1a0e011-0ad4-4f99-be45-527ed09c8475",
+      "name": "Upload Image to Wordpress",
+      "credentials": {
+        "wordpressApi": {
+          "id": "gGfRrkCtaoISRmDr",
+          "name": "WP - Cartilo (Dax AI)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.runware.ai/v1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <your_token_goes_here>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n    {\n    \"taskType\": \"imageInference\",\n    \"taskUUID\": \"39d7207a-87ef-4c93-8082-1431f9c1dc97\",\n    \"numberResults\": 1,\n    \"width\": 1024,\n    \"height\": 1024,\n    \"scheduler\": \"FlowMatchEulerDiscreteScheduler\",\n    \"steps\": 4,\n    \"CFGScale\": 1,\n    \"outputType\": [\n      \"URL\"\n    ],\n    \"outputFormat\": \"WEBP\",\n    \"includeCost\": true,\n    \"positivePrompt\": \"Create a highly realistic, natural-looking image that visually represents the blog article titled({{ $('Topic Chooser and Title Maker').item.json.output.title }}). Mandatory: DO NOT PUT ANY TEXT IN THE IMAGE. The image should be grounded in reality with believable lighting, textures, and composition—avoid fantasy or surreal elements. Focus on lifelike details that a real camera could capture. Do not include any text in the image.\",\n    \"model\": \"runware:100@1\"\n  }\n]",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        80
+      ],
+      "id": "0c7480ee-4a9d-4676-8f2f-c0e2527b3eaa",
+      "name": "Generate Images",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data[0].imageURL }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        80
+      ],
+      "id": "2fa9fd14-39ee-463b-a794-3a9ad4a68b7d",
+      "name": "Take Image to Pass"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://<your-web-url>/wp-json/wp/v2/posts/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"meta\": {\n    \"_yoast_wpseo_focuskw\": \"{{ $('Topic Chooser and Title Maker').item.json.output.focus_phrase }}\",\n    \"_yoast_wpseo_metadesc\": \"{{ $('Topic Chooser and Title Maker').item.json.output.meta_description }}\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        80
+      ],
+      "id": "211bc3ba-c2ab-4ab4-bdd1-2b8128cf640a",
+      "name": "Yoast Meta Desc & Focus Paraphrase",
+      "credentials": {
+        "wordpressApi": {
+          "id": "gGfRrkCtaoISRmDr",
+          "name": "WP - Cartilo (Dax AI)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        60,
+        -320
+      ],
+      "id": "93fa5eb9-cfd2-4f99-b542-fd99769a07af",
+      "name": "Scheduled Auto Trigger (Every 3 Hours)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Topic Chooser and Title Maker": {
+      "main": [
+        [
+          {
+            "node": "Generate Article Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Discord channel": {
+      "main": [
+        []
+      ]
+    },
+    "Attach Feature Image to Post": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Article Generator (alt2)": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Article Generator": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Article Body",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Article Body": {
+      "main": [
+        [
+          {
+            "node": "Create WP Draft Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ALT: Metadata Generator (Gemini)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Topic Chooser and Title Maker",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Blog Metadata JSON": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Topic Chooser and Title Maker",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create WP Draft Post": {
+      "main": [
+        [
+          {
+            "node": "Yoast Meta Desc & Focus Paraphrase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image to Wordpress": {
+      "main": [
+        [
+          {
+            "node": "Attach Feature Image to Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Images": {
+      "main": [
+        [
+          {
+            "node": "Take Image to Pass",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Take Image to Pass": {
+      "main": [
+        [
+          {
+            "node": "Upload Image to Wordpress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Yoast Meta Desc & Focus Paraphrase": {
+      "main": [
+        [
+          {
+            "node": "Generate Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scheduled Auto Trigger (Every 3 Hours)": {
+      "main": [
+        [
+          {
+            "node": "Topic Chooser and Title Maker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5d21e96b-9dfc-4f56-870f-21aa17261bdb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "Quwefz1G5jAJ4WtZ",
+  "tags": []
+}
