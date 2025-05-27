@@ -42,3 +42,7 @@ Thanks to the n8n community and all contributors who share workflows and use cas
 ## 📬 Contact
 
 For suggestions, collaboration, or feedback, feel free to open an issue or reach out.
+
+## ☕ Support
+
+Wanna buy me a coffee to fuel more workflows? Head to [buymeacoffee.com/khmuhtadin](https://buymeacoffee.com/khmuhtadin)!

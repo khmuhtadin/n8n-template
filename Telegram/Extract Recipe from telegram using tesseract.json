@@ -1,5 +1,5 @@
 {
-  "name": "Extract Recipe Using Tesseract",
+  "name": "Tesseract - Money MateX",
   "nodes": [
     {
       "parameters": {
@@ -7,24 +7,24 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [100, 200],
-      "id": "ecd439fe-ccbb-4653-9880-165a6f69426b",
+      "position": [120, 200],
+      "id": "42a12e32-36e3-40c1-9f33-9947c0e263a1",
       "name": "Format Summary Message"
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/bot{{ $credentials.yourbottoken }}/getFile?file_id={{ $json.message.photo[3].file_id }}",
+        "url": "=https://api.telegram.org/bot<your_bot_token_here>/getFile?file_id={{ $json.message.photo[3].file_id }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [-600, -180],
-      "id": "14a47f09-075d-47c6-a56f-8b44b2079e6e",
+      "id": "4078e97c-debf-4216-8c18-c9e1d8b76fd5",
       "name": "Get Telegram File"
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/file/bot{{ $credentials.yourbottoken }}/{{ $node['Get Telegram File'].json['result']['file_path'] }}",
+        "url": "=https://api.telegram.org/file/bot<your_bot_token_here>/{{ $node['Get Telegram File'].json['result']['file_path'] }}",
         "options": {
           "response": {
             "response": {
@@ -36,7 +36,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [-300, -180],
-      "id": "8f50e858-6cbc-4999-bf27-6253fc0fcd41",
+      "id": "819b724d-7ab5-4a59-b3d0-52a77013c311",
       "name": "Download Image"
     },
     {
@@ -47,9 +47,9 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [-1280, 0],
-      "id": "45b7b3c5-c6d4-45b6-8806-a0804b6a6551",
+      "id": "9e7d33c8-42d1-4870-8626-087aae8375c6",
       "name": "Telegram Trigger",
-      "webhookId": "ebc04a7c-be96-4fba-a781-8efe01f447b2",
+      "webhookId": "56161a53-5b4d-46fb-9a9b-d65cdd9a7070",
       "credentials": {
         "telegramApi": {
           "id": "UAvyFVvuZ3qtAjBR",
@@ -67,7 +67,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-1280, -140],
-      "id": "721e7f94-27a4-4d93-b362-aa449e8404a9",
+      "id": "094293ee-dcdc-4a19-b33a-5361e12177db",
       "name": "Sticky - Telegram Trigger"
     },
     {
@@ -86,7 +86,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.6,
       "position": [-200, 200],
-      "id": "563a242d-fe74-4d42-9a72-79cb2945acc9",
+      "id": "49a51aa2-0a1c-417e-868e-d6a5f9284846",
       "name": "AI Categorizer"
     },
     {
@@ -117,7 +117,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [380, 200],
-      "id": "b8db4655-b419-424f-b5e9-2111d5831507",
+      "id": "15feb90d-e82f-4c45-8785-2fa9a26e98b7",
       "name": "Check Invalid Input"
     },
     {
@@ -137,7 +137,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [-600, 200],
-      "id": "47efaf2d-23e9-43d9-bf82-1fa32b5e76fb",
+      "id": "cc4cf545-6ef9-455b-a5b6-9876bc2e3866",
       "name": "Extract Text Input"
     },
     {
@@ -169,7 +169,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [-980, 0],
-      "id": "490fe4dc-5456-4f08-ace7-8ee9f4bc87fb",
+      "id": "b6dc7831-994c-4539-a456-cbfde3c009a8",
       "name": "Check for Image"
     },
     {
@@ -181,7 +181,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-980, -140],
-      "id": "970fe327-8b82-4d8c-9f81-b38deb768dd1",
+      "id": "ea0c351f-8cae-4252-a3b9-34a1d03d3ef2",
       "name": "Sticky - Check for Image"
     },
     {
@@ -191,7 +191,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
       "position": [-40, 380],
-      "id": "de5ac510-d757-449e-92cf-ad22976bf06d",
+      "id": "0e3d255e-69e7-4b78-82c4-1077a3ea91f4",
       "name": "Receipt Parser"
     },
     {
@@ -201,7 +201,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [-200, 380],
-      "id": "a2b4ffb7-abe8-4298-abee-8d14390ad242",
+      "id": "675093cf-68b1-47b1-a2c5-aeda2e1b5360",
       "name": "AI Analyzer",
       "credentials": {
         "openRouterApi": {
@@ -219,9 +219,9 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [700, 180],
-      "id": "aa36fb3b-fc38-419d-b520-7fd5cc474697",
+      "id": "ffed21ef-2aed-4d63-b17e-df83bd4e6c9d",
       "name": "Send Error Message",
-      "webhookId": "6fbaf25f-b6dd-44c8-bce9-49159dfc1757",
+      "webhookId": "6c7df749-2bb0-4dff-95f8-8980325158e1",
       "credentials": {
         "telegramApi": {
           "id": "UAvyFVvuZ3qtAjBR",
@@ -238,9 +238,9 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [700, 460],
-      "id": "e1e9ecb9-c40f-4031-8d40-01ce7fb01ddc",
+      "id": "af0f7caa-f746-4eb3-bf57-4c345e448c23",
       "name": "Send Expense Summary",
-      "webhookId": "05642f0e-27a5-4234-a101-dacc75bbb470",
+      "webhookId": "f7a56f02-1aa8-4caa-9ccb-e4006a98db69",
       "credentials": {
         "telegramApi": {
           "id": "UAvyFVvuZ3qtAjBR",
@@ -258,7 +258,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [680, -300],
-      "id": "d416dcad-b156-40c7-a0de-e46b268dd878",
+      "id": "9ebee364-9df5-4e05-acee-dad2e3f02d07",
       "name": "Sticky - Parse Receipt Data1"
     },
     {
@@ -268,7 +268,7 @@
       "type": "n8n-nodes-tesseractjs.tesseractNode",
       "typeVersion": 1,
       "position": [20, -180],
-      "id": "958bcce1-d9a2-4318-b6fd-47351631af7d",
+      "id": "13a31b33-3ccc-4680-a2c6-cd8255a827e0",
       "name": "Extract Value From Image"
     },
     {
@@ -280,7 +280,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [700, 360],
-      "id": "bf5e529b-f6a7-433c-bf91-1d6d55542766",
+      "id": "297c9837-890b-42a2-9234-3d808ada6850",
       "name": "Sticky - Send Expense Summary1"
     },
     {
@@ -292,7 +292,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-600, 100],
-      "id": "482b1aca-67ff-4c5c-8201-35799a032990",
+      "id": "32f7368a-cac0-4b4e-b944-9a3453a78118",
       "name": "Sticky - Extract Text Input1"
     },
     {
@@ -304,7 +304,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-60, 500],
-      "id": "3a0e917f-acae-48ca-93ee-bc48b94c61e6",
+      "id": "c7c9d1cd-368b-4374-9533-e3e76fb48c08",
       "name": "Sticky - Parse Receipt Data2"
     },
     {
@@ -316,7 +316,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-600, -280],
-      "id": "4dc34baf-b732-47c2-932f-be2e67752cf2",
+      "id": "4b3b0887-e3a7-4365-a41b-6773d2009d71",
       "name": "Sticky - Get Telegram File1"
     },
     {
@@ -328,7 +328,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-300, -280],
-      "id": "62a9671e-ad05-40c3-9538-e0d5485c7978",
+      "id": "b1edb77f-6425-47f3-ba63-ed1b00dd6219",
       "name": "Sticky - Download Image2"
     },
     {
@@ -340,7 +340,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [0, -280],
-      "id": "a4a22a9f-8035-4508-a0b6-b5e2cf95d309",
+      "id": "d7437f5c-276d-46b5-956b-72d89809ebc9",
       "name": "Sticky - Download Image3"
     },
     {
@@ -352,7 +352,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [100, 80],
-      "id": "c0e74e58-1e17-4ffd-8c01-870e8b750054",
+      "id": "a381a022-9675-4e22-8bb5-b27992cfc3b8",
       "name": "Sticky - Format Summary Message1"
     },
     {
@@ -364,7 +364,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-200, 80],
-      "id": "f5ec65f1-738b-42a2-9114-7b1c694887d1",
+      "id": "5234e9fe-0202-460a-8a26-4dbf64ef3141",
       "name": "Sticky - AI Categorizer1"
     },
     {
@@ -376,7 +376,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [700, 80],
-      "id": "5758b4fc-34ce-4451-a328-71528995b28c",
+      "id": "1a7c3a49-a08c-4260-a393-04803a96aa02",
       "name": "Sticky - Send Error Message1"
     },
     {
@@ -388,7 +388,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [380, 80],
-      "id": "d945a2b3-7c41-41fe-9d89-72f69a42229d",
+      "id": "912961cb-4ce1-41ea-9007-876ad3478a09",
       "name": "Sticky - Check Invalid Input1"
     },
     {
@@ -400,8 +400,21 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [-400, 500],
-      "id": "101e18a0-1949-41f8-9826-dc2b5f1a2984",
+      "id": "56dfbcb7-b04c-41ba-b1e8-c7ad273a8bb4",
       "name": "Sticky - OpenRouter AI Model1"
+    },
+    {
+      "parameters": {
+        "content": "## **Important**\nchange <your_bot_token_here> with your actual bot token",
+        "height": 100,
+        "width": 560,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-600, -400],
+      "id": "f8c8b2dd-3cfd-44f3-965b-868f1b02c10b",
+      "name": "Sticky - Telegram Trigger1"
     }
   ],
   "pinData": {},
@@ -546,11 +559,11 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "e457070d-1c5c-4768-8749-1abe0a395fbe",
+  "versionId": "19a10619-152a-479d-995c-e6ee6dd0cf3c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
   },
-  "id": "8gEQB8UrTY0j4VV2",
+  "id": "V2s5idMq9qNtiMP9",
   "tags": []
 }
