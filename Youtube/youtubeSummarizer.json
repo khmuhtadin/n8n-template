@@ -1,0 +1,303 @@
+{
+  "name": "Youtube Summarizer",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepgram.com/v1/listen",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "nova-2"
+            },
+            {
+              "name": "smart_format",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token YOUR-TOKEN-HERE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.message.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, -220],
+      "id": "df063a09-3a17-4bbc-bb82-24373b03051c",
+      "name": "HTTP Request",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Input URL').item.json.message.chat.id }}",
+        "text": "={{ $json.output.video_analysis.title }}\n\n{{ $json.output.video_analysis.main_theme }}\n\nTarget: {{ $json.output.video_analysis.target_audience }}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 **KEY INSIGHTS:**\n- {{ $json.output.content_summary.key_insights[0] }}\n- {{ $json.output.content_summary.key_insights[1] }}\n- {{ $json.output.content_summary.key_insights[2] }}\n\n🛠️ **ACTIONABLE TIPS:**\n- {{ $json.output.content_summary.actionable_tips[0] }}\n- {{ $json.output.content_summary.actionable_tips[1] }}\n- {{ $json.output.content_summary.actionable_tips[2] }}\n\n🚨 **PROBLEMS IDENTIFIED:**\n- {{ $json.output.content_summary.problems_identified[0] }}\n- {{ $json.output.content_summary.problems_identified[1] }}\n\n💊 **SOLUTIONS PROVIDED:**\n- {{ $json.output.content_summary.solutions_provided[0] }}\n- {{ $json.output.content_summary.solutions_provided[1] }}\n\n📝 **HIGHLIGHTS:**\n- {{ $json.output.content_summary.quotes_highlights[0] }}\n- {{ $json.output.content_summary.quotes_highlights[1] }}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n✅ **STATUS:** Content package generated successfully!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1000, 0],
+      "id": "c42475cd-53d3-40be-a2d9-f34609d6f020",
+      "name": "Send Summary",
+      "webhookId": "5f1a8d44-b7ab-4722-90d6-eb0d3ca0e5f2",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZxnDnpV5eL5P210h",
+          "name": "@motuyoutubebot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "id": "d831da4b-64ad-4996-914f-0fa0d5d514c0",
+      "name": "Input URL",
+      "webhookId": "3598a9f7-a66c-4e5d-b0ac-3a44d94a46e5",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZxnDnpV5eL5P210h",
+          "name": "@motuyoutubebot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getTranscript",
+        "videoId": "={{ $json.message.text }}",
+        "text": true
+      },
+      "type": "n8n-nodes-supadata.supadata",
+      "typeVersion": 1,
+      "position": [260, 0],
+      "id": "740c2930-0d26-4cd4-b5e8-7f982fc19669",
+      "name": "Make Transcribe",
+      "credentials": {
+        "supadataApi": {
+          "id": "KewPbDvnIGskee7I",
+          "name": "SUpadata Trial"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "do as instructured!",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=I have a transcription from a YouTube video that I'd like you to transform into an SEO-optimized blog post for my Shopify store that sells digital products. Please complete this in two steps:\n\n## Step 1: Create Summary Bullet Points\nFirst, analyze the transcription and create a comprehensive summary in bullet point format. Focus on:\n- Main topics and key themes discussed\n- Important insights, tips, or strategies mentioned\n- Any specific examples, case studies, or stories shared\n- Actionable takeaways for readers\n- Key statistics, data points, or research mentioned\n- Problems identified and solutions provided\n\n## Step 2: Transform into SEO Blog Post\n\n### Content Requirements:\n- **Length**: 1,500-2,500 words\n- **Tone**: Casual, humble, conversational (avoid robotic corporate speak)\n- **Target Audience**: People interested in digital products, online business, or the topic covered in the video\n- **Purpose**: Provide value while subtly positioning my digital products as helpful resources\n\n### SEO Optimization Guidelines:\n- Create an engaging, keyword-rich title (60 characters or less)\n- Write a compelling meta description (150-160 characters)\n- Use H2 and H3 subheadings naturally throughout\n- Include relevant keywords organically (don't stuff)\n- Add internal linking opportunities (mention where I could link to product pages)\n- Include a clear call-to-action related to my digital products\n- Structure for featured snippets where possible\n\n### Content Structure:\n1. **Hook Opening** - Start with a relatable problem, question, or story\n2. **Introduction** - Set context and promise value\n3. **Main Content Sections** - Organize the video insights into logical sections with subheadings\n4. **Personal Touch** - Add humble insights, personal experiences, or honest observations\n5. **Practical Application** - Show how readers can implement the ideas\n6. **Connection to Digital Products** - Naturally mention how my products could help (without being pushy)\n7. **Conclusion** - Summarize key points and encourage action\n\n### Tone Guidelines:\n- Write like you're talking to a friend over coffee\n- Use \"I\" and \"you\" to create connection\n- Share honest thoughts and admit when something is challenging\n- Include conversational phrases like \"Here's the thing...\" or \"What I found interesting was...\"\n- Ask rhetorical questions to engage readers\n- Use contractions (don't, won't, can't) for natural flow\n- Be authentic - it's okay to show personality and humor where appropriate\n\n### Technical SEO Elements to Include:\n- Suggest 3-5 relevant keywords to target\n- Recommend 2-3 internal link opportunities for product pages\n- Include 1-2 external links to authoritative sources\n- Suggest image alt-text for any visuals I might add\n- Provide schema markup suggestions if applicable\n\n## Additional Notes:\n- If the video mentions specific tools, products, or resources, integrate them naturally\n- Transform any timestamps or \"as mentioned in the video\" references into smooth blog content\n- If there are multiple speakers or interview segments, blend the insights seamlessly\n- Consider seasonal relevance or trending topics related to the content\n- Think about what questions readers might have and address them preemptively\n\n## Transcription to Analyze:\n{{ $json.content }}\n\n---\n\n**Please process this transcription following the steps above and output in the structured format for easy content distribution across platforms.**"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [560, 0],
+      "id": "32256633-5ad1-4646-b8c8-8c9747f325bb",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [560, 180],
+      "id": "dd25ada5-9d74-4efc-ba74-81eaeb8c71f7",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "IWdqsaVAq1AL1S28",
+          "name": "n8n - Money manager Khairul"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"video_analysis\": {\n    \"title\": \"Main topic or title from video content\",\n    \"duration_estimate\": \"estimated original video length\",\n    \"main_theme\": \"primary subject matter\",\n    \"target_audience\": \"who this content is for\"\n  },\n  \"content_summary\": {\n    \"key_insights\": [\n      \"First major insight or learning point\",\n      \"Second important takeaway\",\n      \"Third valuable concept\"\n    ],\n    \"actionable_tips\": [\n      \"Practical tip number one\",\n      \"Actionable advice number two\"\n    ],\n    \"problems_identified\": [\n      \"Problem or challenge mentioned\",\n      \"Pain point discussed\"\n    ],\n    \"solutions_provided\": [\n      \"Solution or strategy offered\",\n      \"Method or approach suggested\"\n    ],\n    \"quotes_highlights\": [\n      \"Notable quote or statement from video\",\n      \"Memorable phrase or insight\"\n    ]\n  },\n  \"social_media_content\": {\n    \"instagram\": {\n      \"carousel_posts\": [\n        {\n          \"slide_1\": {\n            \"text\": \"Hook or main point (under 100 chars)\",\n            \"visual_suggestion\": \"suggested image or graphic type\"\n          },\n          \"slide_2\": {\n            \"text\": \"Supporting detail or tip\",\n            \"visual_suggestion\": \"chart, quote, or illustration\"\n          },\n          \"slide_3\": {\n            \"text\": \"Call to action or conclusion\",\n            \"visual_suggestion\": \"CTA graphic or brand image\"\n          }\n        }\n      ],\n      \"story_series\": [\n        {\n          \"story_1\": \"Quick tip or insight (under 80 chars)\",\n          \"story_2\": \"Follow-up or detail\",\n          \"story_3\": \"CTA to blog or product\"\n        }\n      ],\n      \"reels_ideas\": [\n        {\n          \"concept\": \"Quick tip or before/after concept\",\n          \"hook\": \"Attention-grabbing opening line\",\n          \"script_outline\": \"Brief script structure\"\n        }\n      ],\n      \"hashtag_sets\": {\n        \"primary\": [\"#maintopic\", \"#industry\", \"#audience\"],\n        \"secondary\": [\"#longtail\", \"#specific\", \"#niche\"],\n        \"branded\": [\"#yourbrand\", \"#yourproduct\"]\n      }\n    },\n    \"twitter\": {\n      \"tweet_series\": [\n        {\n          \"tweet_1\": \"Hook tweet with main insight (under 280 chars)\",\n          \"tweet_2\": \"Supporting detail or example\",\n          \"tweet_3\": \"Practical application\",\n          \"tweet_4\": \"CTA or conclusion\"\n        }\n      ],\n      \"single_tweets\": [\n        \"Standalone insight tweet\",\n        \"Quick tip tweet\",\n        \"Question tweet to engage audience\"\n      ],\n      \"thread_starters\": [\n        \"Thread opener that promises value\",\n        \"Controversial or thought-provoking statement\"\n      ]\n    },\n    \"linkedin\": {\n      \"posts\": [\n        {\n          \"format\": \"professional_insight\",\n          \"opening\": \"Professional hook or industry observation\",\n          \"body\": \"Main content with business angle\",\n          \"cta\": \"Professional networking or business CTA\",\n          \"post_length\": \"medium\"\n        }\n      ],\n      \"article_ideas\": [\n        \"Extended professional article concept based on video\"\n      ]\n    },\n    \"tiktok\": {\n      \"video_concepts\": [\n        {\n          \"hook\": \"First 3 seconds attention grabber\",\n          \"concept\": \"Main video idea or format\",\n          \"script_outline\": \"Brief structure of video content\"\n        }\n      ]\n    }\n  },\n  \"blog_content\": {\n    \"seo_metadata\": {\n      \"primary_title\": \"Main SEO-optimized title (under 60 chars)\",\n      \"alternative_titles\": [\n        \"Alternative title option 1\",\n        \"Alternative title option 2\"\n      ],\n      \"meta_description\": \"Compelling description (150-160 chars)\",\n      \"focus_keyword\": \"main target keyword\",\n      \"related_keywords\": [\"keyword2\", \"keyword3\", \"keyword4\"],\n      \"long_tail_keywords\": [\"specific long tail phrase 1\", \"phrase 2\"],\n      \"url_slug\": \"seo-friendly-url-slug\",\n      \"estimated_search_volume\": \"high/medium/low\",\n      \"content_type\": \"how-to/listicle/guide/opinion\"\n    },\n    \"article_structure\": {\n      \"introduction\": {\n        \"hook\": \"Opening hook paragraph\",\n        \"problem_statement\": \"What problem does this solve\",\n        \"value_proposition\": \"What reader will gain\",\n        \"word_count\": 150\n      },\n      \"main_sections\": [\n        {\n          \"section_number\": 1,\n          \"h2_heading\": \"Main Section Heading\",\n          \"content\": \"Full section content in HTML format\",\n          \"subsections\": [\n            {\n              \"h3_heading\": \"Subsection Heading\",\n              \"content\": \"Subsection content\",\n              \"word_count\": 200\n            }\n          ],\n          \"key_takeaway\": \"Main point of this section\"\n        }\n      ],\n      \"conclusion\": {\n        \"summary\": \"Key points recap\",\n        \"call_to_action\": \"Specific CTA related to digital products\",\n        \"next_steps\": \"What reader should do next\",\n        \"word_count\": 200\n      }\n    },\n    \"content_enhancements\": {\n      \"internal_links\": [\n        {\n          \"anchor_text\": \"natural anchor text\",\n          \"target_page\": \"product-page-slug or blog-post-slug\",\n          \"placement_context\": \"where it fits naturally in content\",\n          \"link_purpose\": \"conversion/SEO/user-experience\"\n        }\n      ],\n      \"external_links\": [\n        {\n          \"anchor_text\": \"reference text\",\n          \"suggested_domain\": \"authoritative source domain\",\n          \"purpose\": \"credibility/research/example\"\n        }\n      ],\n      \"multimedia_suggestions\": [\n        {\n          \"type\": \"image/infographic/video\",\n          \"placement\": \"after section X\",\n          \"alt_text\": \"SEO-optimized alt description\",\n          \"caption\": \"engaging caption text\",\n          \"purpose\": \"visual break/explanation/engagement\"\n        }\n      ]\n    },\n    \"conversion_elements\": {\n      \"product_mentions\": [\n        {\n          \"product_name\": \"your digital product name\",\n          \"natural_placement\": \"where to mention organically\",\n          \"benefit_connection\": \"how it relates to content\",\n          \"cta_suggestion\": \"specific call-to-action text\"\n        }\n      ],\n      \"lead_magnets\": [\n        {\n          \"type\": \"checklist/template/guide\",\n          \"title\": \"Free resource title\",\n          \"description\": \"what it includes\",\n          \"placement\": \"where to offer in article\"\n        }\n      ]\n    }\n  },\n  \"automation_data\": {\n    \"shopify_blog\": {\n      \"title\": \"exact blog post title\",\n      \"handle\": \"url-handle-slug\",\n      \"content\": \"complete HTML formatted blog post content\",\n      \"excerpt\": \"blog listing excerpt (160 chars max)\",\n      \"tags\": [\"seo-tag1\", \"category-tag2\", \"topic-tag3\"],\n      \"author\": \"author name\",\n      \"published\": false,\n      \"featured_image_alt\": \"featured image alt text\"\n    },\n    \"social_scheduler_ready\": {\n      \"instagram\": {\n        \"feed_posts\": [\n          {\n            \"caption\": \"complete caption with hashtags\",\n            \"first_comment\": \"additional hashtags or CTA\",\n            \"post_type\": \"single/carousel/reel\"\n          }\n        ],\n        \"stories\": [\n          {\n            \"text_overlay\": \"story text content\",\n            \"sticker_suggestions\": \"poll/question/quiz ideas\"\n          }\n        ]\n      },\n      \"twitter\": {\n        \"scheduled_tweets\": [\n          {\n            \"content\": \"tweet content under 280 chars\",\n            \"thread_position\": 1,\n            \"media_suggestion\": \"image/gif/video\"\n          }\n        ]\n      },\n      \"linkedin\": {\n        \"posts\": [\n          {\n            \"content\": \"full LinkedIn post content\",\n            \"post_type\": \"text/document/poll\"\n          }\n        ]\n      }\n    },\n    \"analytics_tracking\": {\n      \"utm_parameters\": {\n        \"utm_source\": \"youtube\",\n        \"utm_medium\": \"repurposed-content\",\n        \"utm_campaign\": \"video-to-blog-series\"\n      },\n      \"conversion_goals\": [\"blog-traffic\", \"product-views\", \"email-signups\"],\n      \"kpis_to_track\": [\"time-on-page\", \"scroll-depth\", \"click-through-rate\"]\n    }\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [740, 180],
+      "id": "6c760aff-4494-4e8c-a4f5-0e1ab4e04d09",
+      "name": "Parsing"
+    },
+    {
+      "parameters": {
+        "content": "## Get Input and Transcribe Video\n\n### Required API Keys:\n- **Deepgram API**: Get your free $200 credit [here](https://deepgram.com/)\n- **Supadata KEY**: Get your transcription API key [here](https://supadata.com/)\n\n### Setup Instructions:\n1. Send URL to your bot to start Transcribing",
+        "height": 560,
+        "width": 660,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-160, -380],
+      "typeVersion": 1,
+      "id": "093b750d-0a37-4a02-b8e1-d8a89982c805",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## AI PARSING & Send Summary\n\nUsing OpenAI, extract the value from transcript and send in bullet point",
+        "height": 480,
+        "width": 720,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [540, -160],
+      "typeVersion": 1,
+      "id": "24ff25f0-5eab-409e-b232-ea1f68771af7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## This Template is Free\n\n### Have any request, contact me [Here](https://shop.khmuhtadin.com/pages/contact) or care to give [coffee](coff.ee/khmuhtadin) would be awesome",
+        "width": 620,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [540, -340],
+      "id": "03b94628-01f2-4373-b683-f33d478ac8fc",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {
+    "Input URL": [
+      {
+        "json": {
+          "update_id": 616892127,
+          "message": {
+            "message_id": 4,
+            "from": {
+              "id": 621412350,
+              "is_bot": false,
+              "first_name": "khairul",
+              "username": "Khmuhtadin",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 621412350,
+              "first_name": "khairul",
+              "username": "Khmuhtadin",
+              "type": "private"
+            },
+            "date": 1750067565,
+            "text": "https://youtu.be/UPvBc4kS8UA?si=EdL5KhwXxtzm_m-v",
+            "entities": [
+              {
+                "offset": 0,
+                "length": 48,
+                "type": "url"
+              }
+            ],
+            "link_preview_options": {
+              "url": "https://youtu.be/UPvBc4kS8UA?si=EdL5KhwXxtzm_m-v"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Input URL": {
+      "main": [
+        [
+          {
+            "node": "Make Transcribe",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Transcribe": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Send Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarize",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsing": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Summarize",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a31a71e3-cc23-4880-8791-8b8c88be9867",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "LXISJ7aStsFV2P1U",
+  "tags": []
+}
