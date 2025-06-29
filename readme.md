@@ -10,6 +10,9 @@ This repository includes a growing collection of ready-to-use n8n workflow templ
 
 Each workflow is designed to be easy to import, modify, and run in your own n8n instance.
 
+## ⚠️ Important Notice: 
+These templates are provided for educational and personal use only. They are NOT FOR SALE and should not be used for commercial purposes without proper attribution.
+
 ## 🛠 Requirements
 
 - A running instance of n8n (self-hosted or cloud)
