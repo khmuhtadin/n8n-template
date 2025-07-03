@@ -1,0 +1,191 @@
+{
+  "name": "Error Monitoring!",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [20, 320],
+      "id": "ef401694-6d19-4d49-8269-0bfeefbc35e9"
+    },
+    {
+      "parameters": {
+        "sendTo": "<yourmail>",
+        "subject": "error paduka raja!",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [460, 320],
+      "id": "09a04430-1cb6-4bd5-b97d-d6b98541fd82",
+      "name": "Notify Gmail",
+      "webhookId": "52f0cc71-1ad8-4f9a-b07c-bae9be1e217c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8p11S7abjY8KddB9",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "recipientPhoneNumber": ",penerima message>",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [460, 520],
+      "id": "d78b5623-caab-4616-aa3a-e00af03cba3a",
+      "name": "Notify Whatsapp",
+      "webhookId": "fde1b1fc-48dc-4d7b-b48a-c42b36225a43",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [460, 720],
+      "id": "8c5dbd37-cc37-4a1a-89c4-bbf692339b93",
+      "name": "Notify Slack",
+      "webhookId": "d2b8ce70-e478-4f05-9add-37d859f73dd8",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "<your_chat_id>",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Notify Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [460, 120],
+      "id": "0ec6e5cb-c290-4073-9560-0f237f85a6bd",
+      "webhookId": "13c616bf-a3ad-4035-998a-1dfe6021b89f",
+      "credentials": {
+        "telegramApi": {
+          "id": "dRZHNcPa8EcTYTY2",
+          "name": "Khaisa Monitoring Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [460, -80],
+      "id": "4e378031-382d-4abd-94f5-b7274f42161e",
+      "name": "Notify Discord",
+      "webhookId": "ea0cb122-61d1-4457-9447-34daa40dccdc",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "LLZlMnlqvhY0SVaL",
+          "name": "Discord Webhook account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## 🚨 Error Monitoring Workflow\n\nThis workflow automatically sends notifications when any other workflow fails.\n\nSimply download copy and paste into your workflow then add your credential with prefered channel\n\nThis workflow is free. \nwant more? [contact me](khmuhtadin.com)\n\nhave something to helps me chill, [a coffee](coff.ee/khmuhtadin) would be great!",
+        "height": 280,
+        "width": 420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-80, 500],
+      "typeVersion": 1,
+      "id": "ad022c9b-4453-4590-b27e-358e342e1f26",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hello, this workflow is made by khaisa. please visit shop.khaisa.com for more tailored support\n\n// Perfect error access untuk N8N v1.99.1\nconst errorData = $input.first().json;\nconst execution = errorData.execution;\nconst workflow = errorData.workflow;\nconst error = execution.error;\n\nconst message = `🚨 <b>WORKFLOW ERROR</b>\\n\\n` +\n  `📋 Workflow: <b>${workflow.name}</b>\\n` +\n  `⚙️ Node: <code>${error.node.name}</code>\\n` +\n  `❌ Error: <code>${error.message}</code>\\n` +\n  `📝 Description: <i>${error.description}</i>\\n` +\n  `🕐 Waktu: ${new Date(error.timestamp).toLocaleString('id-ID')}\\n` +\n  `🔍 Execution: <a href=\"${execution.url}\">${execution.id}</a>\\n` +\n  `⚠️ Level: ${error.level.toUpperCase()}`;\n\nreturn {\n  message: message,\n  parse_mode: 'HTML',\n  chat_id: '621412350'\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 320],
+      "id": "e950234f-06c7-4304-b8a6-62d3ba6b7a50",
+      "name": "Prepare Messages"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Whatsapp": {
+      "main": [[]]
+    },
+    "Prepare Messages": {
+      "main": [
+        [
+          {
+            "node": "Notify Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Discord",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Slack",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Whatsapp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "eb21ed00-33b1-4872-9bb2-9752b1389455",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "7RR5Rf9kzQ2eWl5C",
+  "tags": []
+}
