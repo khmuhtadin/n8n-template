@@ -1,0 +1,345 @@
+{
+  "name": "Automate Collect and Noitify Wocommerce Order",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f8f2288d-3581-4361-8148-10532ec8f6a1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        48
+      ],
+      "id": "5f14c05c-f46f-458f-b132-951d1da99c2b",
+      "name": "Order webhook",
+      "webhookId": "f8f2288d-3581-4361-8148-10532ec8f6a1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Node Code untuk parsing WooCommerce Order ke Discord\n\n// Debug: Cek struktur data yang masuk\nconsole.log('Full $json:', JSON.stringify($json, null, 2));\n\n// Coba berbagai kemungkinan struktur data\nlet orderData;\n\nif ($json && $json.body) {\n  // Jika data langsung di $json.body\n  orderData = $json.body;\n} else if ($json && Array.isArray($json) && $json[0] && $json[0].body) {\n  // Jika data di $json[0].body\n  orderData = $json[0].body;\n} else if ($json && Array.isArray($json) && $json[0]) {\n  // Jika data langsung di $json[0]\n  orderData = $json[0];\n} else if ($json) {\n  // Jika data langsung di $json\n  orderData = $json;\n} else {\n  throw new Error('Data webhook tidak ditemukan. Struktur data: ' + JSON.stringify($json));\n}\n\n// Validasi apakah orderData memiliki field yang dibutuhkan\nif (!orderData || !orderData.id) {\n  throw new Error('Data pesanan tidak valid. OrderData: ' + JSON.stringify(orderData));\n}\n\n// Parse informasi pesanan utama\nconst orderInfo = {\n  id: orderData.id,\n  status: orderData.status,\n  total: orderData.total,\n  currency: orderData.currency,\n  currency_symbol: orderData.currency_symbol,\n  date_created: orderData.date_created,\n  payment_method: orderData.payment_method_title,\n  shipping_total: orderData.shipping_total\n};\n\n// Parse informasi customer\nconst customerInfo = {\n  name: `${orderData.billing.first_name} ${orderData.billing.last_name}`,\n  email: orderData.billing.email,\n  phone: orderData.billing.phone,\n  address: `${orderData.billing.address_1}${orderData.billing.address_2 ? ', ' + orderData.billing.address_2 : ''}, ${orderData.billing.city}, ${orderData.billing.state} ${orderData.billing.postcode}`,\n  country: orderData.billing.country\n};\n\n// Parse item-item yang dibeli (dinamis)\nconst items = orderData.line_items.map(item => ({\n  name: item.name,\n  sku: item.sku,\n  quantity: item.quantity,\n  price: item.price,\n  subtotal: item.subtotal,\n  product_id: item.product_id,\n  image_url: item.image?.src || null\n}));\n\n// Parse informasi pengiriman\nconst shippingInfo = orderData.shipping_lines.length > 0 ? {\n  method: orderData.shipping_lines[0].method_title,\n  cost: orderData.shipping_lines[0].total\n} : null;\n\n// Format currency untuk display\nconst formatCurrency = (amount) => {\n  return new Intl.NumberFormat('id-ID', {\n    style: 'currency',\n    currency: orderData.currency,\n    minimumFractionDigits: 0\n  }).format(amount);\n};\n\n// Buat embed untuk Discord\nconst discordEmbed = {\n  title: `🛒 Pesanan Baru #${orderInfo.id}`,\n  color: orderInfo.status === 'pending' ? 16776960 : // Kuning untuk pending\n         orderInfo.status === 'processing' ? 255 : // Biru untuk processing  \n         orderInfo.status === 'completed' ? 65280 : // Hijau untuk completed\n         16711680, // Merah untuk status lainnya\n  timestamp: new Date(orderInfo.date_created).toISOString(),\n  fields: [\n    {\n      name: \"📊 Status Pesanan\",\n      value: orderInfo.status.toUpperCase(),\n      inline: true\n    },\n    {\n      name: \"💰 Total Pembayaran\", \n      value: formatCurrency(orderInfo.total),\n      inline: true\n    },\n    {\n      name: \"💳 Metode Pembayaran\",\n      value: orderInfo.payment_method,\n      inline: true\n    },\n    {\n      name: \"👤 Customer\",\n      value: `**Nama:** ${customerInfo.name}\\n**Email:** ${customerInfo.email}\\n**Telepon:** ${customerInfo.phone}`,\n      inline: false\n    },\n    {\n      name: \"📍 Alamat Pengiriman\",\n      value: customerInfo.address,\n      inline: false\n    }\n  ]\n};\n\n// Tambahkan field untuk setiap item yang dibeli\nitems.forEach((item, index) => {\n  discordEmbed.fields.push({\n    name: `🛍️ Item ${index + 1}`,\n    value: `**${item.name}**\\n` +\n           `SKU: ${item.sku}\\n` +\n           `Qty: ${item.quantity}x\\n` +\n           `Harga: ${formatCurrency(item.price)}\\n` +\n           `Subtotal: ${formatCurrency(item.subtotal)}`,\n    inline: true\n  });\n});\n\n// Tambahkan info pengiriman jika ada\nif (shippingInfo) {\n  discordEmbed.fields.push({\n    name: \"🚚 Pengiriman\",\n    value: `${shippingInfo.method}\\nBiaya: ${formatCurrency(shippingInfo.cost)}`,\n    inline: true\n  });\n}\n\n// Tambahkan thumbnail dari produk pertama jika ada gambar\nif (items.length > 0 && items[0].image_url) {\n  discordEmbed.thumbnail = {\n    url: items[0].image_url\n  };\n}\n\n// Footer dengan informasi tambahan\ndiscordEmbed.footer = {\n  text: `Order ID: ${orderInfo.id} | Taffware Store`,\n  icon_url: \"https://taffware.com/wp-content/uploads/2024/03/cropped-logo-taffware-32x32.png\"\n};\n\n// Return data untuk Discord Bot (format lebih sederhana)\nreturn [\n  {\n    json: {\n      // Kirim sebagai single embed object, bukan array embeds\n      title: discordEmbed.title,\n      color: discordEmbed.color,\n      description: `**Customer:** ${customerInfo.name}\\n**Email:** ${customerInfo.email}\\n**Total:** ${formatCurrency(orderInfo.total)}`,\n      fields: discordEmbed.fields.slice(0, 10), // Limit fields untuk avoid error\n      timestamp: discordEmbed.timestamp,\n      footer: discordEmbed.footer,\n      thumbnail: discordEmbed.thumbnail\n    }\n  }\n];\n\n// Alternative: Jika ingin format text biasa tanpa embed\n/*\nconst simpleMessage = `\n🛒 **PESANAN BARU #${orderInfo.id}**\n\n👤 **Customer:** ${customerInfo.name}\n📧 **Email:** ${customerInfo.email}\n📱 **Telepon:** ${customerInfo.phone}\n\n🛍️ **Items:**\n${items.map(item => `• ${item.name} (${item.quantity}x) - ${formatCurrency(item.subtotal)}`).join('\\n')}\n\n💰 **Total:** ${formatCurrency(orderInfo.total)}\n🚚 **Pengiriman:** ${shippingInfo ? `${shippingInfo.method} (${formatCurrency(shippingInfo.cost)})` : 'N/A'}\n💳 **Pembayaran:** ${orderInfo.payment_method}\n📊 **Status:** ${orderInfo.status.toUpperCase()}\n\n📍 **Alamat:**\n${customerInfo.address}\n\n🕐 **Waktu:** ${new Date(orderInfo.date_created).toLocaleString('id-ID')}\n`;\n\nreturn [{ json: { content: simpleMessage } }];\n*/"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        48
+      ],
+      "id": "b49bc0c9-d5f0-4a39-884b-a1e304846e98",
+      "name": "Parse Order Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c793e31e-9c60-4cbf-9182-548632f7158c",
+              "leftValue": "={{ $json.fields[0].value }}",
+              "rightValue": "PROCESSING",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "df59eb44-df34-4621-ae02-658890cb828e",
+              "leftValue": "={{ $json.footer.text }}",
+              "rightValue": "Taffware",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        48
+      ],
+      "id": "65053a4f-a83e-4905-ad9d-63434eaf62b7",
+      "name": "Check If Processing"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1409061244454965312",
+          "mode": "list",
+          "cachedResultName": "Jakserver",
+          "cachedResultUrl": "https://discord.com/channels/1409061244454965312"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1409061628204421200",
+          "mode": "list",
+          "cachedResultName": "order-updated",
+          "cachedResultUrl": "https://discord.com/channels/1409061244454965312/1409061628204421200"
+        },
+        "content": "=",
+        "options": {},
+        "embeds": {
+          "values": [
+            {
+              "description": "={{ $json.fields[0].name }}: {{ $json.fields[0].value }}\n\n{{ $json.fields[3].value }}\n\n{{ $json.fields[4].name }}: {{ $json.fields[4].value }}\n\nItem:{{ $json.fields[5].value }}\n\n{{ $json.fields[6].name }}: {{ $json.fields[6].value }}\n\n{{ $json.fields[1].name }}: {{ $json.fields[1].value }}\n{{ $json.fields[2].name }}: {{ $json.fields[2].value }}\n\n",
+              "color": "={{ \n  $json.status === \"pending\" ? 16776960 : \n  ($json.status === \"processing\" ? 255 : \n  ($json.status === \"CANCELED\" ? 8421504 : 65280)) \n}}",
+              "title": "={{ $json.title }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        128,
+        144
+      ],
+      "id": "a30963be-9431-4eb3-9a8a-26dbf98dd01a",
+      "name": "Notify Discord",
+      "webhookId": "fb817909-f749-478b-a77b-5e672b35875d",
+      "credentials": {
+        "discordBotApi": {
+          "id": "wFtjoP5nAFvFmrju",
+          "name": "Brands Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        352,
+        144
+      ],
+      "id": "86a2e47e-5d89-4363-9da9-03a4cae188a2",
+      "name": "Webhook Response"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jfJAeting5HWckeXn8GDdUZoRgI8rg-MpnqeU8oHzf8",
+          "mode": "list",
+          "cachedResultName": "Recap Pesanan Website Brand",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jfJAeting5HWckeXn8GDdUZoRgI8rg-MpnqeU8oHzf8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jfJAeting5HWckeXn8GDdUZoRgI8rg-MpnqeU8oHzf8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nomor Pesanan Web": "={{ $json.title.match(/#(\\d+)/)[1] }}",
+            "Bulan": "={{ new Date($json.timestamp).toLocaleDateString('en-US') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Bulan",
+              "displayName": "Bulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Brand",
+              "displayName": "Brand",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nomor Pesanan Web",
+              "displayName": "Nomor Pesanan Web",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "No Pesanan Jakmall",
+              "displayName": "No Pesanan Jakmall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ekspedisi",
+              "displayName": "Ekspedisi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "No Resi",
+              "displayName": "No Resi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        -48
+      ],
+      "id": "666093b7-3d78-4736-b20c-cc654f0b30bd",
+      "name": "Append Order Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aa0mTHWxeqHMemo1",
+          "name": "khairul.muhtadin@jakmall.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Collect Woocommerce Order\n\n- **Set up your webhook URL in WooCommerce** to send order updates to n8n.\n- **All order statuses (\"PROCESSING\", \"PENDING\", \"CANCEL\")** are sent as notifications to Discord.\n- **Only \"PROCESSING\" orders** (already paid) are also appended to Google Sheets for tracking.\n- **\"PENDING\" or \"CANCEL\" orders** are not logged in the sheet, only notified on Discord.\n",
+        "height": 208,
+        "width": 1088
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "567bd452-02c0-4b8c-92e0-ee6879166f46",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Getting Credentials\n\n### 1. Discord Bot Token\n- Visit the [Discord Developer Portal](https://discord.com/developers/applications).\n- Create a new application and add a bot.\n- Copy your bot token and enter it in n8n’s Discord node credentials.\n\n### 2. Google Sheets OAuth2\n- Go to the [Google Cloud Console](https://console.cloud.google.com/).\n- Create a new project and enable the Google Sheets API.\n- Set up the OAuth consent screen and create OAuth credentials.\n- Download your credentials and add them to n8n’s Google Sheets node.\n- Authenticate with your Google account when prompted.\n\n### 3. WooCommerce Webhook\n- In WooCommerce admin, go to **Settings > Advanced > Webhooks**.\n- Add a new webhook and set the delivery URL to your n8n webhook endpoint.\n- Select the event type (e.g., Order Updated) and activate the webhook.\n\n**Note:** Test all credentials in n8n to ensure proper connection before using the workflow.",
+        "height": 592,
+        "width": 496
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1136,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "227589a8-f7a1-45c2-90d5-aaefb7d668c1",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Order webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Order Data": {
+      "main": [
+        [
+          {
+            "node": "Check If Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Processing": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Discord": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1d95ecb6-0fd2-47af-aa25-8b32db73bf2a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "zonJvk4B9Hisfacz",
+  "tags": []
+}
