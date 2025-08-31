@@ -1,0 +1,201 @@
+{
+  "name": "Promo Seeker",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        512,
+        208
+      ],
+      "id": "3c07ac00-df2b-405f-b0bd-492099eaff88",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "RnX2LOB0xs45mOEw",
+          "name": "Login w Github"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        0
+      ],
+      "id": "ef0545fc-9caf-4d4f-aaf2-1681ef52ec17",
+      "name": "Message",
+      "webhookId": "8cca6785-5e60-4cca-92c2-859e362c68c9"
+    },
+    {
+      "parameters": {
+        "model": "gpt5mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "7da8aa0c-0bc1-4196-b20c-b40270d2ac22",
+      "name": "Gpt 5 Mini",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "f2y13FBDaQZYGn8T",
+          "name": "GPT5-mini"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "8a9ea170-c9dd-469a-bd84-2ef1d49841aa",
+      "name": "Chat Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@decodo/n8n-nodes-decodo.decodoTool",
+      "typeVersion": 1,
+      "position": [
+        368,
+        208
+      ],
+      "id": "fdcd13cf-f3d3-43b2-9c99-32fe50f26bc6",
+      "name": "Decodo Scrapper",
+      "credentials": {
+        "decodoApi": {
+          "id": "um6rsqlbtrY3NRQB",
+          "name": "cm@g.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## How to Get Credentials \n\n### 1. SerpAPI Node\n\n- Go to [SerpAPI](https://serpapi.com/) and sign up.\n- After logging in, find your **API Key** in your dashboard.\n- In n8n, go to **Credentials** > **Create New** > **SerpAPI**.\n- Paste your API Key and save.\n\n### 2. Azure OpenAI (Gpt 5 Mini) Node\n\n- Go to [Azure Portal](https://portal.azure.com/) and create an Azure OpenAI resource.\n- In your resource, go to **Keys and Endpoint**.\n- Copy your **API Key** and **Endpoint URL**.\n- In n8n, go to **Credentials** > **Create New** > **Azure OpenAI API**.\n- Enter your API Key and Endpoint, then save.\n\n### 3. Decodo Scrapper Node\n\n- Go to [Decodo](https://decodo.com/) and sign up.\n- After logging in, find your **API Key** in your account settings.\n- In n8n, go to **Credentials** > **Create New** > **Decodo API**.\n- Paste your API Key and save.\n---\n**Note:**  \nKeep your API keys secure and never share them publicly.\n",
+        "height": 656,
+        "width": 464,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "07d248ac-97de-49eb-8d30-c960ae6fcb8d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## How This Workflow Works (Sticky Note)\n\n- This workflow is designed to help you find valid and working promo codes and vouchers from across the internet.\n- When you send a message, the AI Agent uses search tools (SerpAPI, Decodo Scrapper) to look for the latest discounts and vouchers.\n- The AI Agent checks and filters results to show only new and active promos.\n- All results are displayed in the chat for easy access.\n- Just type what kind of promo you want and let the workflow do the rest!",
+        "height": 240,
+        "width": 672
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "9dcd1a64-5248-402f-9781-618067dec74d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "you are a voucher and discount seeker expert. use provided tools to find a new, valid and working voucher accross internet"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7d1347ac-3335-4b88-9513-1133906bddd7",
+      "name": "Promo Seeker Agent"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message": {
+      "main": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gpt 5 Mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decodo Scrapper": {
+      "ai_tool": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bff1cf5a-123c-4781-b12b-e09926a4d25e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "gSKavHnaQxVY6DLe",
+  "tags": []
+}
