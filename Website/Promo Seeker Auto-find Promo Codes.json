@@ -1,0 +1,625 @@
+{
+  "name": "Promo Seeker: Auto-find Promo Codes with SerpAPI, Gemini & Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        336,
+        368
+      ],
+      "id": "3c07ac00-df2b-405f-b0bd-492099eaff88",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "RnX2LOB0xs45mOEw",
+          "name": "Login w Github"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## How to Get Credentials\n\n### 1. SerpAPI Node\n- Go to [SerpAPI](https://serpapi.com/) and sign up\n- After logging in, find your **API Key** in your dashboard\n- In n8n: **Credentials** > **Create New** > **SerpAPI**\n- Paste your API Key and save\n\n### 2. OpenRouter (Gemini 2.5 Pro) Node\n- Go to [OpenRouter](https://openrouter.ai/) and create an account\n- Navigate to **Keys** section\n- Copy your **API Key**\n- In n8n: **Credentials** > **Create New** > **OpenRouter API**\n- Enter your API Key and save\n\n### 3. Telegram Nodes (Trigger & Send Message)\n- Open Telegram and search for [@BotFather](https://t.me/botfather)\n- Send `/newbot` and follow instructions to create your bot\n- Copy the **Bot Token** provided\n- In n8n: **Credentials** > **Create New** > **Telegram API**\n- Paste your Bot Token and save\n\n### 4. Gmail Node\n- In n8n: **Credentials** > **Create New** > **Gmail OAuth2**\n- Click **Connect my account**\n- Authorize with your Google account\n- Grant necessary permissions\n\n### 5. Data Table Nodes\n- **No credentials needed** - Data Tables are built into n8n\n- Create tables directly in your n8n instance\n\n**Required columns for this workflow:**\n- `platform` (string)\n- `promoCode` (string)\n- `value` (string)\n- `termsConditions` (string)\n- `validUntil` (dateTime)\n\n---\n**Security Note:** Keep all API keys secure and never share them publicly.",
+        "height": 976,
+        "width": 464,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        -864
+      ],
+      "typeVersion": 1,
+      "id": "07d248ac-97de-49eb-8d30-c960ae6fcb8d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## How This Workflow Works (Sticky Note)\n\n- This workflow is designed to help you find valid and working promo codes and vouchers from across the internet.\n- When you send a message, the AI Agent uses search tools (SerpAPI) to look for the latest discounts and vouchers.\n- The AI Agent checks and filters results to show only new and active promos.\n- All results are displayed in the chat for easy access.\n- Just type what kind of promo you want and let the workflow do the rest!",
+        "height": 240,
+        "width": 672
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "9dcd1a64-5248-402f-9781-618067dec74d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=platform: {{ $('Platform').item.json.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# Voucher & Discount Finder Expert\n\nYou are a specialized assistant focused on finding valid, working vouchers and discount codes across the internet.\n\n## Your Primary Objectives:\n1. Search for current, active discount codes and vouchers\n2. Verify codes are recent and likely to be working (within last 30 days)\n3. Present results clearly with code and discount value upfront\n4. Focus on the most recent and reliable sources\n\n## Search Strategy:\n- Use web_search to find current voucher codes\n- Look for codes posted within the last 30 days from today's date\n- Prioritize reputable coupon sites and official brand sources\n- Cross-reference multiple sources when possible\n- Check for expiration dates\n\n## Response Format:\nWhen you find vouchers, present them as:\n- **CODE**: [the actual voucher code]\n- **VALUE**: [discount amount or percentage]\n- **EXPIRES**: [expiration date if available]\n- **SOURCE**: [where you found it]\n- **VERIFIED**: [date it was posted/verified]\n\n## Important Notes:\n- Current date: {{$now}}\n- Only search for codes from the last 30 days maximum\n- Be direct - provide codes immediately without lengthy explanations\n- If no valid codes are found, clearly state this and suggest alternatives"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        144
+      ],
+      "id": "7d1347ac-3335-4b88-9513-1133906bddd7",
+      "name": "Promo Seeker Agent"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        208,
+        368
+      ],
+      "id": "81953a00-781c-4006-b61e-6106a7e29d1b",
+      "name": "Gemini 2.5Pro",
+      "credentials": {
+        "openRouterApi": {
+          "id": "DPrHlBN0s5WFDxi9",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -912,
+        96
+      ],
+      "id": "a3c4bcfa-f44e-464a-9667-45665d5d3e52",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7641500-13e1-46ec-8240-0b32e4fec715",
+              "name": "query",
+              "value": "={{ $json.Platform || $json.message?.text || $json.body.platform || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "2813a353-96d0-4a90-906e-8b6340b9d099",
+              "name": "receiver",
+              "value": "={{ $json.chatId || $json.email || $json.body.email || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -464,
+        -256
+      ],
+      "id": "0bda292f-52b0-479a-9774-c10ed91ba455",
+      "name": "Platform"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -256
+      ],
+      "id": "c9e850a8-1324-41bc-ac1b-dece1e729db5",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -912,
+        -304
+      ],
+      "id": "1f41e894-393d-4f24-99a7-e25fb6ebba04",
+      "name": "Telegram Trigger",
+      "webhookId": "899a09bc-da17-4356-8ac8-6024bc89e1f0",
+      "credentials": {
+        "telegramApi": {
+          "id": "8ynwakYF3qrbGMJC",
+          "name": "Khaisa 2 bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"platform\": \"platform\",\t\n  \"code1\": \"code1\",\n\t\"value\": \"value\",\n    \"terms\": \"terms and conditions\",\n    \"validUntil\": \"promo code period valid until(date)\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        368
+      ],
+      "id": "6e3f07f7-18b8-497c-9862-ee347a24673c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "taO6FckoITHcml0P",
+          "mode": "list",
+          "cachedResultName": "Kode Promo Valid",
+          "cachedResultUrl": "/projects/HdidsWtKEV9HXZzb/datatables/taO6FckoITHcml0P"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "platform",
+              "keyValue": "={{ $json.query }}"
+            }
+          ]
+        },
+        "limit": 3
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -256
+      ],
+      "id": "1112adb5-866f-4465-ac12-75e8a1efce98",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4a12f7e0-f301-4efd-9b06-31489a31b6a3",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        -256
+      ],
+      "id": "4a45c2ce-69e2-40c8-b54e-f17a0637d8ed",
+      "name": "Code Exist?"
+    },
+    {
+      "parameters": {
+        "formTitle": "Promo Seeker",
+        "formDescription": "temukan promocode disini",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Platform",
+              "placeholder": "nama platformnya",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "email",
+              "placeholder": "nanti kodenya bakal dikirim kesini",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -912,
+        -496
+      ],
+      "id": "49157a6c-a6eb-42da-9f0c-0f6de6e8ca2a",
+      "name": "On form submission",
+      "webhookId": "bf149cfe-39e4-4788-aff1-18bf412b708e"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.email }}",
+        "subject": "=Kode Promo {{ $json.platform.toUpperCase() || $json.platform }} Sudah Tersedia",
+        "message": "=<!DOCTYPE html>\n<html lang=\"id\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Kode Promo Spesial</title>\n</head>\n<body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f4f4f4; padding: 20px;\">\n        <tr>\n            <td align=\"center\">\n                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n                    <!-- Header -->\n                    <tr>\n                        <td style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;\">\n                            <h1 style=\"margin: 0; color: #ffffff; font-size: 28px;\">🎉 Kode Promo Buatmu nih!</h1>\n                        </td>\n                    </tr>\n                    \n                    <!-- Content -->\n                    <tr>\n                        <td style=\"padding: 40px 30px;\">\n                            <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n                                <tr>\n                                    <td style=\"padding-bottom: 20px;\">\n                                        <table width=\"100%\" cellpadding=\"10\" cellspacing=\"0\" style=\"background-color: #f8f9fa; border-radius: 6px;\">\n                                            <tr>\n                                                <td style=\"font-weight: bold; color: #333333; width: 40%;\">Platform:</td>\n                                                <td style=\"color: #666666;\">{{ $json.platform }}</td>\n                                            </tr>\n                                            <tr>\n                                                <td style=\"font-weight: bold; color: #333333;\">Kode Promo:</td>\n                                                <td>\n                                                    <span style=\"background-color: #667eea; color: #ffffff; padding: 8px 16px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; display: inline-block;\">{{ $json.promoCode }}</span>\n                                                </td>\n                                            </tr>\n                                            <tr>\n                                                <td style=\"font-weight: bold; color: #333333;\">Value Promo:</td>\n                                                <td style=\"color: #28a745; font-weight: bold; font-size: 18px;\">{{ $json.value }}</td>\n                                            </tr>\n                                            <tr>\n                                                <td style=\"font-weight: bold; color: #333333; vertical-align: top;\">Keterangan:</td>\n                                                <td style=\"color: #666666; line-height: 1.6;\">{{ $json.termsConditions }}</td>\n                                            </tr>\n                                            <tr>\n                                                <td style=\"font-weight: bold; color: #333333;\">Masa Berlaku:</td>\n                                                <td style=\"color: #dc3545; font-weight: bold;\">{{ $json.validUntil.split('T')[0] }}</td>\n                                            </tr>\n                                        </table>\n                                    </td>\n                                </tr>\n                            </table>\n                        </td>\n                    </tr>\n                    \n                    <!-- Footer -->\n                    <tr>\n                        <td style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef;\">\n                            <p style=\"margin: 0; color: #6c757d; font-size: 14px;\">\n                                Just for you by <a href=\"https://khmuhtadin.com\" style=\"color: #667eea; text-decoration: none; font-weight: bold;\">khmuhtadin.com</a>\n                            </p>\n                        </td>\n                    </tr>\n                </table>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        336,
+        -160
+      ],
+      "id": "9a5a4eb7-151d-4d39-b068-27aa67b31690",
+      "name": "Send a message",
+      "webhookId": "006b2867-4edf-45ef-a326-e9e7255cd13c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8p11S7abjY8KddB9",
+          "name": "contactmuhtadin"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "taO6FckoITHcml0P",
+          "mode": "list",
+          "cachedResultName": "Kode Promo Valid",
+          "cachedResultUrl": "/projects/HdidsWtKEV9HXZzb/datatables/taO6FckoITHcml0P"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "promoCode",
+              "keyValue": "={{ $json.output.code1 }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "platform": "={{ $json.output.platform }}",
+            "promoCode": "={{ $json.output.code1 }}",
+            "value": "={{ $json.output.value }}",
+            "termsConditions": "={{ $json.output.terms }}",
+            "validUntil": "={{ $json.output.validUntil }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "platform",
+              "displayName": "platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "promoCode",
+              "displayName": "promoCode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "termsConditions",
+              "displayName": "termsConditions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "validUntil",
+              "displayName": "validUntil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        672,
+        144
+      ],
+      "id": "9a50f702-f752-49e8-9b31-a045e91508c1",
+      "name": "Upsert row(s)"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=<b>🎉 Kode Promo Buatmu nih!</b>\n\n<b>Platform:</b> {{ $json.platform }}\n<b>Kode Promo:</b> <code>{{ $json.promoCode }}</code>\n<b>Value Promo:</b> {{ $json.value }}\n<b>Keterangan:</b> {{ $json.termsConditions }}\n<b>Masa Berlaku:</b> {{ $json.validUntil.split('T')[0] }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        -352
+      ],
+      "id": "bc5cd4aa-8f91-4f5c-acf4-e2668fc1933b",
+      "name": "notify telegram",
+      "webhookId": "8797e5dc-8f45-49b0-b520-ce54bcaf03a2",
+      "credentials": {
+        "telegramApi": {
+          "id": "8ynwakYF3qrbGMJC",
+          "name": "Khaisa 2 bot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "v1/promo-seeker",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -912,
+        -112
+      ],
+      "id": "23461331-3de2-4b4b-b45d-8525ebe9775d",
+      "name": "Webhook",
+      "webhookId": "1f3a6ec2-0991-437f-acec-e15bcc5a5b42"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        336,
+        -544
+      ],
+      "id": "6c8c94e6-0c45-49d5-a378-4864e628ffc5",
+      "name": "Respond to Webhook",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5Pro": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platform": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Promo Seeker Agent": {
+      "main": [
+        [
+          {
+            "node": "Upsert row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Exist?": {
+      "main": [
+        [
+          {
+            "node": "notify telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Promo Seeker Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert row(s)": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "530912f1-fec3-4e40-a79b-45906765ee8a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "gSKavHnaQxVY6DLe",
+  "tags": []
+}
