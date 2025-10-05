@@ -1,0 +1,574 @@
+{
+  "name": "TL-TICKET",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po",
+          "mode": "list",
+          "cachedResultName": "TABRAK LARI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Register",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        544,
+        224
+      ],
+      "id": "c87b9d7a-3e8f-402d-80e3-adbbe601dd34",
+      "name": "Get Rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "75fc42dd-aeec-4109-970d-7eb026b6b097",
+              "leftValue": "={{ $json[\"Payment Status\"] }}",
+              "rightValue": "PAID",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "70bf28b6-59dc-4acc-8908-5e521d83c4fa",
+              "leftValue": "={{ $json[\"Email Sent\"] }}",
+              "rightValue": "NO",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        224
+      ],
+      "id": "9afaa041-f9e6-45f8-95ae-56f1ca169b6e",
+      "name": "Filter Paid Not Sent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i].json;\n  \n  // Parse jumlah tiket\n  const jumlahTiket = parseInt(item[\"Jumlah TIket\"]) || 1;\n  \n  // Generate ALL ticket IDs first for this person\n  const allTicketsForThisPerson = [];\n  \n  for (let ticketNum = 1; ticketNum <= jumlahTiket; ticketNum++) {\n    const now = new Date();\n    const timestamp = now.toISOString().slice(0,10).replace(/-/g, '');\n    const rowNum = item.row_number || (i + 2);\n    const hash = Math.random().toString(36).substring(2, 10).toUpperCase();\n    \n    const ticketId = `TL-${timestamp}-${String(rowNum).padStart(4, '0')}-${ticketNum}-${hash}`;\n    allTicketsForThisPerson.push(ticketId);\n    \n    const qrData = JSON.stringify({\n      event: \"TABRAK_LARI\",\n      ticket_id: ticketId,\n      name: item.Nama,\n      email: item.Email,\n      ticket_number: ticketNum,\n      total_tickets: jumlahTiket,\n      timestamp: now.toISOString(),\n      hash: hash\n    });\n    \n    output.push({\n      json: {\n        ...item,\n        ticket_id: ticketId,\n        ticket_number: ticketNum,\n        total_tickets: jumlahTiket,\n        qr_data: qrData,\n        qr_data_url_encoded: encodeURIComponent(qrData),\n        event_name: \"TABRAK LARI\",\n        event_date: \"15 November 2025\",\n        event_location: \"GOR Pontianak\"\n      }\n    });\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        224
+      ],
+      "id": "b8532f81-29ec-46dc-b977-f21dda7e02b9",
+      "name": "Generate Ticket Data"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ $json.qr_data_url_encoded }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        224
+      ],
+      "id": "ab640a10-94bb-4562-9c25-119cc10ab6b6",
+      "name": "Generate QR Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build HTML Ticket Email - MULTIPLE TICKETS SUPPORT\nconst items = $input.all();\nconst output = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i].json;\n  \n  // Get binary data\n  let qrBase64 = '';\n  \n  if (items[i].binary && items[i].binary.data) {\n    const binaryData = items[i].binary.data;\n    \n    if (binaryData.data) {\n      qrBase64 = binaryData.data;\n    } else if (Buffer.isBuffer(binaryData)) {\n      qrBase64 = binaryData.toString('base64');\n    }\n  }\n  \n  const htmlTemplate = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body {\n      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n      padding: 20px;\n      margin: 0;\n    }\n    .ticket-container {\n      max-width: 600px;\n      margin: 0 auto;\n      background: white;\n      border-radius: 20px;\n      overflow: hidden;\n      box-shadow: 0 20px 60px rgba(0,0,0,0.3);\n    }\n    .ticket-header {\n      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n      color: white;\n      padding: 40px 30px;\n      text-align: center;\n    }\n    .ticket-header h1 {\n      margin: 0;\n      font-size: 32px;\n      font-weight: 700;\n      text-transform: uppercase;\n      letter-spacing: 2px;\n    }\n    .ticket-number-badge {\n      background: rgba(255,255,255,0.2);\n      display: inline-block;\n      padding: 8px 20px;\n      border-radius: 20px;\n      margin-top: 10px;\n      font-size: 14px;\n      font-weight: 600;\n    }\n    .ticket-body {\n      padding: 40px 30px;\n    }\n    .qr-section {\n      text-align: center;\n      margin: 30px 0;\n      padding: 30px;\n      background: #f8f9fa;\n      border-radius: 15px;\n    }\n    .qr-section img {\n      max-width: 280px;\n      border: 8px solid white;\n      border-radius: 10px;\n      box-shadow: 0 5px 15px rgba(0,0,0,0.1);\n    }\n    .ticket-info {\n      background: #f8f9fa;\n      padding: 25px;\n      border-radius: 15px;\n      margin: 20px 0;\n    }\n    .info-row {\n      display: flex;\n      justify-content: space-between;\n      padding: 12px 0;\n      border-bottom: 1px solid #dee2e6;\n    }\n    .info-row:last-child {\n      border-bottom: none;\n    }\n    .info-label {\n      font-weight: 600;\n      color: #495057;\n    }\n    .info-value {\n      color: #212529;\n      font-weight: 500;\n    }\n    .ticket-id {\n      text-align: center;\n      font-size: 20px;\n      font-weight: 700;\n      color: #667eea;\n      margin: 20px 0;\n      padding: 15px;\n      background: #f8f9fa;\n      border-radius: 10px;\n      letter-spacing: 1px;\n      word-break: break-all;\n    }\n    .important-note {\n      background: #fff3cd;\n      border-left: 4px solid #ffc107;\n      padding: 20px;\n      margin: 25px 0;\n      border-radius: 5px;\n    }\n    .important-note h3 {\n      margin-top: 0;\n      color: #856404;\n    }\n    .footer {\n      text-align: center;\n      padding: 30px;\n      color: #6c757d;\n      font-size: 14px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"ticket-container\">\n    <div class=\"ticket-header\">\n      <h1>${item.event_name}</h1>\n      <p style=\"margin: 10px 0 0 0; font-size: 18px;\">Tiketmu Telah Tersedia!</p>\n      <div class=\"ticket-number-badge\">\n        Tiket ${item.ticket_number} dari ${item.total_tickets}\n      </div>\n    </div>\n    \n    <div class=\"ticket-body\">\n      <h2 style=\"color: #212529; margin-top: 0;\">Hi ${item.Nama || item.Name || 'Guest'}!</h2>\n      <p style=\"color: #495057; font-size: 16px; line-height: 1.6;\">\n        Terima kasih atas pembayaran Anda! Berikut adalah tiket <strong>#${item.ticket_number}</strong> dari total <strong>${item.total_tickets} tiket</strong> yang Anda pesan.\n      </p>\n      \n      <div class=\"ticket-id\">\n        ${item.ticket_id}\n      </div>\n      \n      <div class=\"qr-section\">\n        <h3 style=\"margin-top: 0; color: #495057;\">Scan QR Code Ini di Entrance</h3>\n        <img src=\"data:image/png;base64,${qrBase64}\" alt=\"QR Code Ticket\" />\n      </div>\n      \n      <div class=\"ticket-info\">\n        <h3 style=\"margin-top: 0; color: #495057;\">Detail Tiket</h3>\n        <div class=\"info-row\">\n          <span class=\"info-label\">Nama:</span>\n          <span class=\"info-value\">${item.Nama || item.Name || 'Guest'}</span>\n        </div>\n        <div class=\"info-row\">\n          <span class=\"info-label\">Email:</span>\n          <span class=\"info-value\">${item.Email}</span>\n        </div>\n        <div class=\"info-row\">\n          <span class=\"info-label\">Tiket:</span>\n          <span class=\"info-value\">#${item.ticket_number} dari ${item.total_tickets}</span>\n        </div>\n        <div class=\"info-row\">\n          <span class=\"info-label\">Ticket ID:</span>\n          <span class=\"info-value\">${item.ticket_id}</span>\n        </div>\n      </div>\n      \n      <div class=\"important-note\">\n        <h3>Penting!</h3>\n        <ul style=\"margin: 10px 0; padding-left: 20px;\">\n          <li>Simpan email ini dengan baik</li>\n          <li>Setiap tiket memiliki QR code unik</li>\n          <li>Tunjukkan QR code saat masuk venue</li>\n          <li>Satu tiket hanya berlaku untuk satu kali scan</li>\n          <li>Datang 30 menit sebelum acara dimulai</li>\n        </ul>\n      </div>\n    </div>\n    \n    <div class=\"footer\">\n      <p style=\"margin: 5px 0;\">2025 TABRAK LARI Event. All rights reserved.</p>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\n  output.push({\n    json: {\n      ...item,\n      html_content: htmlTemplate,\n      qr_base64: qrBase64\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        224
+      ],
+      "id": "33f9f200-684d-4a0a-8cd5-214840eb5225",
+      "name": "Build HTML Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "=Tiketmu Telah Tersedia!",
+        "message": "={{ $json.html_content }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1664,
+        32
+      ],
+      "id": "1b55088b-52b9-4881-b531-34d84e53fc62",
+      "name": "Send Email (Gmail)",
+      "webhookId": "28bf1adb-e6ca-4797-ade5-6f7d2746bf1e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8p11S7abjY8KddB9",
+          "name": "festadjagad@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po",
+          "mode": "list",
+          "cachedResultName": "TABRAK LARI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Register",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $json.Email }}",
+            "Email Sent": "YES",
+            "Ticked ID": "={{ $json.ticket_ids_combined }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Nama",
+              "displayName": "Nama",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "No Hp",
+              "displayName": "No Hp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Jumlah TIket",
+              "displayName": "Jumlah TIket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Harga Tiket",
+              "displayName": "Harga Tiket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Method ",
+              "displayName": "Payment Method ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ticked ID",
+              "displayName": "Ticked ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Checked In?",
+              "displayName": "Checked In?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CHECKIN TIME",
+              "displayName": "CHECKIN TIME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1888,
+        224
+      ],
+      "id": "c26f4d3a-edaf-482a-a353-5ff1bdd64736",
+      "name": "Update Sheet (Register)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po",
+          "mode": "list",
+          "cachedResultName": "TABRAK LARI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2010454173,
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit#gid=2010454173"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ticket ID": "={{ $json.ticket_id }}",
+            "Email": "={{ $json.Email }}",
+            "Nama": "={{ $json.Nama }}",
+            "Ticket Number": "={{ $json.ticket_number }}/{{ $json.total_tickets }}",
+            "Total Tickets": "={{ $json.total_tickets }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nama",
+              "displayName": "Nama",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ticket Number",
+              "displayName": "Ticket Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Tickets",
+              "displayName": "Total Tickets",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Checked In",
+              "displayName": "Checked In",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Checkin TIme",
+              "displayName": "Checkin TIme",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1664,
+        416
+      ],
+      "id": "73bd5090-69ed-4b78-b22d-211a2e3c812d",
+      "name": "Update Sheet (Tickets)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        224
+      ],
+      "id": "49dbc35c-9091-4cbd-aca6-ea4a001270be",
+      "name": "START"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst grouped = {};\n\nfor (let item of items) {\n  const email = item.json.Email;\n  \n  if (!grouped[email]) {\n    grouped[email] = {\n      Email: email,\n      ticket_ids: []\n    };\n  }\n  \n  grouped[email].ticket_ids.push(item.json.ticket_id);\n}\n\nconst output = Object.values(grouped).map(item => ({\n  json: {\n    Email: item.Email,\n    ticket_ids_combined: item.ticket_ids.join(\", \")\n  }\n}));\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        224
+      ],
+      "id": "2c5f934b-d4e7-470f-acb6-d7b3eaa18f5c",
+      "name": "Parse Data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Rows": {
+      "main": [
+        [
+          {
+            "node": "Filter Paid Not Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Paid Not Sent": {
+      "main": [
+        [
+          {
+            "node": "Generate Ticket Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Ticket Data": {
+      "main": [
+        [
+          {
+            "node": "Generate QR Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate QR Code": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email (Gmail)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parse Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Sheet (Tickets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email (Gmail)": {
+      "main": [
+        []
+      ]
+    },
+    "START": {
+      "main": [
+        [
+          {
+            "node": "Get Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Data": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet (Register)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "223523f9-3ea0-423c-a035-826dea98770b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "gUsVKPw9rAvW7Je8",
+  "tags": []
+}

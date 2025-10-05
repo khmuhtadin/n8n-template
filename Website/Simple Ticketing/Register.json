@@ -1,0 +1,418 @@
+{
+  "name": "register",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5d1d995d-3ee8-4b56-8555-9fe5b919497a",
+              "leftValue": "={{ $json.row_number !== undefined }}",
+              "rightValue": "undefined",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -64
+      ],
+      "id": "81433528-eb63-48ab-ada6-da0f3bd8cb8e",
+      "name": "Email exist?"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po",
+          "mode": "list",
+          "cachedResultName": "TABRAK LARI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Register",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.Email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -352,
+        -64
+      ],
+      "id": "50b8fa82-6ac5-4daf-9715-dfef59ae06aa",
+      "name": "Get Participant",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all()[0].json.body;\n\n// Validation\nconst errors = [];\n\nif (!data.nama || data.nama.trim() === '') {\n  errors.push('Nama wajib diisi');\n}\n\nif (!data.email || !data.email.includes('@')) {\n  errors.push('Email tidak valid');\n}\n\nif (!data.no_hp || data.no_hp.length < 10) {\n  errors.push('Nomor HP tidak valid');\n}\n\nif (!data.jumlah_tiket || data.jumlah_tiket < 1) {\n  errors.push('Jumlah tiket minimal 1');\n}\n\nif (!data.payment_method) {\n  errors.push('Payment method wajib dipilih');\n}\n\n// Return error if validation fails\nif (errors.length > 0) {\n  return [{\n    json: {\n      valid: false,\n      validation_error: true,\n      errors: errors\n    }\n  }];\n}\n\n// Transform data for sheet\nreturn [{\n  json: {\n    valid: true,\n    validation_error: false,\n    Nama: data.nama,\n    \"No Hp\": data.no_hp,\n    Email: data.email,\n    \"Jumlah TIket\": data.jumlah_tiket,\n    \"Harga Tiket\": data.total_price,\n    \"Payment Method \": data.payment_method,\n    \"Payment Status\": \"PENDING\",\n    \"Email Sent\": \"NO\",\n    \"Ticked ID\": \"\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -48
+      ],
+      "id": "aa0ecf5f-2bbd-4ecc-a532-c10121ea45db",
+      "name": "Validate Input"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": \"Validasi gagal\",\n  \"errors\": [\"Email tidak valid\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -352,
+        96
+      ],
+      "id": "4a9d0cdb-d9a9-4f8a-9bd6-fdd64579b309",
+      "name": "Validation Error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0248f448-237b-46da-86b8-cdc5058ec170",
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -592,
+        -48
+      ],
+      "id": "9a672b84-c37a-45f0-87b3-c1f6d883d2d0",
+      "name": "Valid Input?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"DUPLICATE_EMAIL\",\n  \"message\": \"Email sudah terdaftar\",\n  \"existing_data\": {\n    \"nama\": \"khairul\",\n    \"payment_status\": \"PAID\",\n    \"jumlah_tiket\": 2\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        48,
+        -240
+      ],
+      "id": "c5cab4d2-f5a1-4629-ac8a-98447207260e",
+      "name": "Already Registered"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Registrasi berhasil! Silakan lakukan pembayaran.\",\n  \"data\": {\n    \"nama\": \"{{ $json.Nama }}\",\n    \"email\": \"{{ $json.Email }}\",\n    \"jumlah_tiket\": {{ $json['Jumlah TIket'] }},\n    \"total_price\": {{ $json['Harga Tiket'] }},\n    \"payment_method\": \"{{ $json['Payment Method '] }}\",\n    \"payment_status\": \"PENDING\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        256,
+        -48
+      ],
+      "id": "78ab73f1-8c43-453e-8269-f9c60e3b79e1",
+      "name": "Tiket Booked"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po",
+          "mode": "list",
+          "cachedResultName": "TABRAK LARI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Register",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nama": "={{ $('Validate Input').item.json.Nama }}",
+            "No Hp": "={{ $('Validate Input').item.json['No Hp'] }}",
+            "Email": "={{ $('Validate Input').item.json.Email }}",
+            "Jumlah TIket": "={{ $('Validate Input').item.json['Jumlah TIket'] }}",
+            "Harga Tiket": "={{ $('Validate Input').item.json['Harga Tiket'] }}",
+            "Payment Method ": "={{ $('Validate Input').item.json['Payment Method '] }}",
+            "Payment Status": "={{ $('Validate Input').item.json['Payment Status'] }}",
+            "Email Sent": "={{ $('Validate Input').item.json['Email Sent'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nama",
+              "displayName": "Nama",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "No Hp",
+              "displayName": "No Hp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jumlah TIket",
+              "displayName": "Jumlah TIket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Harga Tiket",
+              "displayName": "Harga Tiket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Method ",
+              "displayName": "Payment Method ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ticked ID",
+              "displayName": "Ticked ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        48,
+        -48
+      ],
+      "id": "adbfaeb0-271c-4f0e-9d88-be5bb8e4a6c4",
+      "name": "Store Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "v1/register",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1024,
+        -48
+      ],
+      "id": "f144df8b-3224-4d52-9d41-c10ba45f8480",
+      "name": "REGISTER",
+      "webhookId": "1f5ebc0c-2fed-4bcb-9741-e70d188db457"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email exist?": {
+      "main": [
+        [
+          {
+            "node": "Already Registered",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Participant": {
+      "main": [
+        [
+          {
+            "node": "Email exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Valid Input?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Input?": {
+      "main": [
+        [
+          {
+            "node": "Get Participant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Data": {
+      "main": [
+        [
+          {
+            "node": "Tiket Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REGISTER": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "78abec0e-2562-4d7c-87c8-cd47544f3787",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "XPoNMRpNg7Sf2NE4",
+  "tags": []
+}

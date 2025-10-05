@@ -1,0 +1,370 @@
+{
+  "name": "scanner",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "v1/scanner",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -736,
+        32
+      ],
+      "id": "5aa4ea42-f4c4-4af1-b315-5f78a2406e27",
+      "name": "Webhook",
+      "webhookId": "492de38d-21ee-4f7d-adfe-dbad80dfa146"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po",
+          "mode": "list",
+          "cachedResultName": "TABRAK LARI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2010454173,
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit#gid=2010454173"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Ticket ID",
+              "lookupValue": "={{ $json.ticket_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -288,
+        32
+      ],
+      "id": "cf80da85-476b-4788-ac6f-39a820f46657",
+      "name": "Get Tickets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all()[0].json.body;\n\n// Parse the barcode JSON string\nlet ticketData;\ntry {\n  ticketData = JSON.parse(data.barcode);\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      message: \"Invalid QR code format\"\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ticket_id: ticketData.ticket_id,\n    event: ticketData.event,\n    name: ticketData.name,\n    email: ticketData.email,\n    ticket_number: ticketData.ticket_number,\n    total_tickets: ticketData.total_tickets,\n    scannedAt: data.scannedAt\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        32
+      ],
+      "id": "3efc874d-cbb6-4a5d-8caa-c47c5fd854d1",
+      "name": "Parse Barcode"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5d1d995d-3ee8-4b56-8555-9fe5b919497a",
+              "leftValue": "={{ $('Get Tickets').all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "982727a9-3593-4d1c-9ab3-d1c26d0798fc",
+              "leftValue": "={{ $json[\"Checked In\"] }}",
+              "rightValue": "YES",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        32
+      ],
+      "id": "5b6af215-9008-49ce-886a-0933e7c49972",
+      "name": "Ticket Available?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const getTicketsResult = $('Get Tickets').all();\nconst parsedData = $('Parse Barcode').first().json;\n\nlet errorMessage = \"Ticket tidak valid\";\nlet errorCode = \"INVALID_TICKET\";\n\n// Check if ticket exists but already checked in\nif (getTicketsResult.length > 0) {\n  const ticket = getTicketsResult[0].json;\n  if (ticket[\"Checked In\"] === \"YES\") {\n    errorMessage = `Ticket sudah di-scan pada ${ticket[\"Checkin TIme\"]}`;\n    errorCode = \"ALREADY_CHECKED_IN\";\n  }\n}\n\nreturn [{\n  json: {\n    success: false,\n    error_code: errorCode,\n    message: errorMessage,\n    ticket_id: parsedData.ticket_id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        208
+      ],
+      "id": "1a439dbd-55d6-4eaf-89a4-f007e5e2cf24",
+      "name": "Parse Output"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        272,
+        208
+      ],
+      "id": "1d2976c7-97e4-413a-bd80-1edbf8e41f57",
+      "name": "Already Checked IN"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Check-in berhasil!\",\n  \"data\": {\n    \"ticket_id\": \"{{ $('Get Tickets').first().json['Ticket ID'] }}\",\n    \"name\": \"{{ $('Get Tickets').first().json.Nama }}\",\n    \"ticket_number\": \"{{ $('Get Tickets').first().json['Ticket Number'] }}\",\n    \"email\": \"{{ $('Get Tickets').first().json.Email }}\",\n    \"checked_in_at\": \"{{ $json[\"Checkin TIme\"] }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        384,
+        -64
+      ],
+      "id": "c37156d9-42f1-4feb-8428-7aef5befd200",
+      "name": "Checked IN"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po",
+          "mode": "list",
+          "cachedResultName": "TABRAK LARI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2010454173,
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rQqe5XWmhWgnsAI6Q8kxoeCTbcNMdHsfP2tHRP7y7Po/edit#gid=2010454173"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ticket ID": "={{ $json[\"Ticket ID\"] }}",
+            "Checked In": "YES",
+            "Checkin TIme": "={{ new Date($('Webhook').item.json.body.scannedAt).toLocaleString('en-GB', { hour12: false }).replace(',', '') }}"
+          },
+          "matchingColumns": [
+            "Ticket ID"
+          ],
+          "schema": [
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nama",
+              "displayName": "Nama",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ticket Number",
+              "displayName": "Ticket Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Tickets",
+              "displayName": "Total Tickets",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Checked In",
+              "displayName": "Checked In",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Checkin TIme",
+              "displayName": "Checkin TIme",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        160,
+        -64
+      ],
+      "id": "152110f0-67e4-4678-8cdf-89c49882f471",
+      "name": "Update Ticket Status",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Barcode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tickets": {
+      "main": [
+        [
+          {
+            "node": "Ticket Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Barcode": {
+      "main": [
+        [
+          {
+            "node": "Get Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket Available?": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Output": {
+      "main": [
+        [
+          {
+            "node": "Already Checked IN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Status": {
+      "main": [
+        [
+          {
+            "node": "Checked IN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5fe7097c-9f22-4186-8d9a-57b1ea9006e4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "KfmnzgQli0T2e0bA",
+  "tags": []
+}
