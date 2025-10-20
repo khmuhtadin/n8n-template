@@ -1,0 +1,285 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f9904b2-6056-43e0-aa3f-914928eb5c79",
+              "name": "userMessage",
+              "value": "Who are you?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        304,
+        -32
+      ],
+      "id": "28f39fe4-798d-4419-a498-b82593fefc07",
+      "name": "Set Message"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://agentrouter.org/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "User-Agent",
+              "value": "claude-cli/2.0.2 (external, cli)"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-5-20250929\",\n  \"max_tokens\": 1024,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.userMessage }}\"\n    }]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        -32
+      ],
+      "id": "66ca3dba-85e0-4ecb-8311-cdb712856b1f",
+      "name": "Agent Router - Claude Code",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vXgN4LYBWUxKuKic",
+          "name": "Agentrouter claudecode"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://agentrouter.org/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-KiloCode-Version",
+              "value": "4.103.0"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Kilo-Code/4.103.0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"deepseek-v3.2\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.userMessage }}\"\n    }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        -224
+      ],
+      "id": "ab5c8f8a-ffb2-4708-a4bf-fd5ff43334f6",
+      "name": "Agent Router - Kilo Code",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "o8Ouvn7vrMk26Ebc",
+          "name": "Agentrouter"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -32
+      ],
+      "id": "18442863-008c-4087-a4fe-fc07631483c6",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://agentrouter.org/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-KiloCode-Version",
+              "value": "4.103.0"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Kilo-Code/4.103.0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"glm-4.6\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.userMessage }}\"\n    }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        160
+      ],
+      "id": "a8bef89e-da7c-42e4-ae5f-4a90d12afa62",
+      "name": "Agent Router - GLM4.6",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "o8Ouvn7vrMk26Ebc",
+          "name": "Agentrouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Agent Router REST API Tester\n\nCompare multiple AI models simultaneously using Agent Router's unified REST API.\n\n**Why REST API?**\n- No CLI dependency required\n- Direct HTTP integration\n- Easy n8n automation\n- Parallel execution support",
+        "height": 286,
+        "width": 331,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -240
+      ],
+      "id": "d9df4245-ac70-4c9e-9817-373d2c9eb6bd",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 Edit Your Prompt\n\nChange the `userMessage` value to test different prompts across all models.",
+        "height": 172,
+        "width": 320,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        64
+      ],
+      "id": "ed80b7ef-beca-4bab-a642-c70eea9abf7c",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## ⚡ Parallel Execution\n\nAll three models are queried simultaneously via REST API:\n\n**Claude Sonnet** (Anthropic format)\n- Endpoint: `/v1/messages`\n- Max tokens: 1024\n\n**Deepseek V3.2** (OpenAI format)\n- Endpoint: `/v1/chat/completions`\n\n**GLM-4.6** (OpenAI format)\n- Endpoint: `/v1/chat/completions`\n\nTotal time = slowest API response",
+        "height": 363,
+        "width": 328,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        256
+      ],
+      "id": "8093319f-343a-4cd4-a09a-b02fb4bc5f96",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 🔑 Setup Required\n\n1. Create Header Auth credential\n2. Name: `Authorization`\n3. Value: `Bearer YOUR_API_KEY`\n4. Get API key from Agent Router dashboard\n\n**Note:** Two credentials shown but you can use the same one for all nodes.",
+        "height": 262.5770925110133,
+        "width": 346.86938709211404,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        160
+      ],
+      "id": "733c0533-3b90-4970-bc63-3ae5c14c9222",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## ☕ Appreciate This Workflow?\n\nSupport the creator by sending coffee:\n\n[Give me a coffe here](https://paypal.me/khmuhtadin)\n\nThank you! 🚀",
+        "height": 164,
+        "width": 354,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        448
+      ],
+      "id": "580eb230-c538-45d7-a2a3-bb7ecf4160c8",
+      "name": "Sticky Note4"
+    }
+  ],
+  "connections": {
+    "Set Message": {
+      "main": [
+        [
+          {
+            "node": "Agent Router - Claude Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent Router - Kilo Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent Router - GLM4.6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  }
+}
