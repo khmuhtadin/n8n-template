@@ -1,0 +1,159 @@
+{
+  "name": "Wordpress Category Mapping",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=[your website goes here]/wp-json/wp/v2/categories",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "options": {}
+      },
+      "id": "9139c5ce-20f6-4110-a635-7b9236788e08",
+      "name": "Get All Categories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        112,
+        80
+      ],
+      "credentials": {
+        "wordpressApi": {
+          "id": "QMDWc5KoLU8O3P19",
+          "name": "WP - Mincara (beginicaranya)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ambil semua data categories\nconst categories = $input.all().map(item => item.json);\n\n// Buat mapping object\nconst categoryMap = {};\nconst categoryList = [];\n\ncategories.forEach(cat => {\n  // Mapping by name (case sensitive & insensitive)\n  categoryMap[cat.name] = cat.id;\n  categoryMap[cat.name.toLowerCase()] = cat.id;\n  \n  // Mapping by slug\n  categoryMap[cat.slug] = cat.id;\n  \n  // Simpan data lengkap\n  categoryList.push({\n    id: cat.id,\n    name: cat.name,\n    slug: cat.slug,\n    count: cat.count,\n    parent: cat.parent\n  });\n});\n\n// Return hasil\nreturn [{\n  json: {\n    categoryMap: categoryMap,\n    categories: categoryList,\n    total: categoryList.length\n  }\n}];"
+      },
+      "id": "facead5b-8a3f-4db4-80b8-daaf51ab47cb",
+      "name": "Map Categories",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "41561c45-5ba8-4c63-aba3-6190dba262cf",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔑 WordPress API Credentials Setup\n\n### Generate Application Password in WordPress\n1. Login to WordPress Admin\n2. Go to **Users** → **Profile**\n3. Scroll down to **Application Passwords** section\n4. Enter name: `n8n Integration`\n5. Click **Add New Application Password**\n6. **COPY THE PASSWORD** (shown only once!)\n\n---\n\n### Add Credentials in n8n\n1. In n8n workflow, click the node that needs credentials\n2. Click **\"+ Create New Credential\"**\n3. Fill in:\n   - **URL**: `https://yoursite.com` (no /wp-json)\n   - **Username**: Your WordPress username\n   - **Password**: Paste the application password\n4. Click **Save**\n\n---\n\n**Note**: Application password format looks like: `xxxx xxxx xxxx xxxx xxxx xxxx`",
+        "height": 592,
+        "width": 448,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        528,
+        64
+      ],
+      "id": "71d561fe-1cbd-4a55-8cda-df3823196284",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ WordPress Limitation\n**WordPress doesn't have a built-in feature to map category names to category IDs.**\n\nWhen creating/updating posts via API, you need to use category IDs (e.g., `14`) instead of names (e.g., `\"Bussines\"`).\n\n**This workflow solves that problem by:**\n- Fetching all categories from WordPress\n- Creating an automatic mapping of category names → IDs\n- Allowing you to use friendly names instead of remembering IDs\n\n**Example Output:**\n```json\n{\n  \"Bussines\": 14,\n  \"Fashion\": 11,\n  \"Fitness\": 9\n}\n```",
+        "height": 416,
+        "width": 656
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        240
+      ],
+      "id": "de78186d-9620-43c1-aecf-d909b157404f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "title": "={{ $('Topic Chooser and Title Maker').item.json.output.title }}",
+        "additionalFields": {
+          "authorId": 2,
+          "content": "={{ $json.text }}",
+          "slug": "={{ $('Topic Chooser and Title Maker').item.json.output.slug }}",
+          "status": "publish",
+          "categories": "={{ $('Topic Chooser and Title Maker').item.json.output.category == \"Bisnis\" ? [14] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Fashion\" ? [11] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Fitness\" ? [9] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Gadget\" ? [13] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Hobi\" ? [17] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Karir\" ? [19] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Kecantikan\" ? [10] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Kesehatan\" ? [8] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Keuangan\" ? [15] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Kuliner\" ? [5] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Lifestyle\" ? [7] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Makanan\" ? [6] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Pariwisata\" ? [12] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Pendidikan\" ? [18] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Teknologi\" ? [16] :\n   $('Topic Chooser and Title Maker').item.json.output.category == \"Travel\" ? [20] : [1] }}"
+        }
+      },
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [
+        352,
+        480
+      ],
+      "id": "575e77ba-0f4a-424e-a907-f7031ff848f4",
+      "name": "Create WP Draft Post",
+      "credentials": {
+        "wordpressApi": {
+          "id": "QMDWc5KoLU8O3P19",
+          "name": "WP - Mincara (beginicaranya)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📋 Category Mapping Usage Examples\n\n### Example 1: Simple Category Assignment\n```javascript\n{{ [$('Map Categories').item.json.categoryMap[$('Topic Chooser and Title Maker').item.json.output.category]] }}\n```\n\n### Example 2: With Fallback (Default to Uncategorized)\n```javascript\n{{ [$('Map Categories').item.json.categoryMap[$('Topic Chooser and Title Maker').item.json.output.category] || 1] }}\n```\n\n### Example 3: Multiple Categories\n```javascript\n{{\n  [\n    $('Map Categories').item.json.categoryMap['Bisnis'],\n    $('Map Categories').item.json.categoryMap['Keuangan']\n  ]\n}}\n```\n\n### Example 4: Case Insensitive (Lowercase Input)\n```javascript\n// Works even if category name is \"bisnis\" (lowercase)\n{{ [$('Map Categories').item.json.categoryMap[$('Topic Chooser').item.json.category.toLowerCase()]] }}\n```\n\n### Example 5: Dynamic from Variable\n```javascript\n{{\n  // Get category from any node\n  const categoryName = $('Some Node').item.json.categoryName;\n  const categoryId = $('Map Categories').item.json.categoryMap[categoryName];\n  \n  return [categoryId || 1]; // Fallback to ID 1 if not found\n}}\n```",
+        "height": 848,
+        "width": 688,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        992,
+        64
+      ],
+      "id": "bdba8ce6-1cec-4bc3-8886-dd480c5893ad",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get All Categories": {
+      "main": [
+        [
+          {
+            "node": "Map Categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Get All Categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f50b7967-023f-4d7e-b631-7f89ed3d0df9",
+  "meta": {
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "mser1lINsM0bETZL",
+  "tags": []
+}
