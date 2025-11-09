@@ -1,0 +1,477 @@
+{
+  "name": "Automate Generate and Deliver Payslip",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-2560, 368],
+      "id": "c4cfd869-eec5-49c9-b866-48fa3bd39119",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "config-001",
+              "name": "companyName",
+              "type": "string",
+              "value": "Khaisa Studio"
+            },
+            {
+              "id": "config-002",
+              "name": "companyAddress",
+              "type": "string",
+              "value": "Company Address Line 1,<br>City, State, Country"
+            },
+            {
+              "id": "config-003",
+              "name": "payrollMonth",
+              "type": "string",
+              "value": "October 2025"
+            },
+            {
+              "id": "config-004",
+              "name": "payrollMonthShort",
+              "type": "string",
+              "value": "Oct 2025"
+            },
+            {
+              "id": "config-005",
+              "name": "paymentDate",
+              "type": "string",
+              "value": "October 25, 2025"
+            },
+            {
+              "id": "config-006",
+              "name": "bankName",
+              "type": "string",
+              "value": "Bank"
+            },
+            {
+              "id": "config-007",
+              "name": "bankAccountLabel",
+              "type": "string",
+              "value": "Bank Account Number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-2352, 368],
+      "id": "e326b4a7-be63-4ad9-ac69-96068c8db253",
+      "name": "Company Configuration"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1_I1INAiK_z0tH99tY7ewatA-aYWHj1-A0NJzHneM2m8",
+          "mode": "list",
+          "cachedResultName": "Gaji Final Cleaned",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_I1INAiK_z0tH99tY7ewatA-aYWHj1-A0NJzHneM2m8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "GAji",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_I1INAiK_z0tH99tY7ewatA-aYWHj1-A0NJzHneM2m8/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-2128, 368],
+      "id": "a8a21d06-1edc-400f-9c26-7373fb8da0c1",
+      "name": "Fetch Payroll Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-1680, 304],
+      "id": "da81de85-ad5b-499b-9334-c4368dcd8c28",
+      "name": "Iterate Payslip Rows"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data and config\nconst inputData = $input.all()[0].json;\nconst config = $('Company Configuration').item.json;\n\n// Helper function to check if value exists\nfunction hasValue(value) {\n  if (value === null || value === undefined) return false;\n  if (typeof value === 'string' && (value.trim() === '' || value === '-')) return false;\n  if (typeof value === 'number' && value === 0) return false;\n  return true;\n}\n\n// Helper function to format currency\nfunction formatCurrency(value) {\n  return Number(value).toLocaleString('id-ID');\n}\n\n// Income fields configuration\nconst incomeFields = [\n  { key: 'Basic Salary', label: 'Basic Salary' },\n  { key: 'Position Allowance', label: 'Position Allowance' },\n  { key: 'Performance Allowance', label: 'Performance Allowance' },\n  { key: 'Shift/Extended', label: 'Shift/Extended' },\n  { key: 'Other Allowance', label: 'Other Allowance' },\n  { key: 'Meal Allowance', label: 'Meal Allowance' },\n  { key: 'Overtime', label: 'Overtime' },\n  { key: 'Arrears', label: 'Arrears' },\n  { key: 'Resignation Compensation', label: 'Resignation Compensation' }\n];\n\n// Deduction fields configuration - FIXED\nconst deductionFields = [\n  { key: 'Employee Insurance Deduction', label: 'Employee Insurance' },\n  { key: 'Health Insurance Deduction', label: 'Health Insurance' },\n  { key: 'Penalty Deduction', label: 'Penalty' },\n  { key: 'Uniform Deduction', label: 'Uniform' },\n  { key: 'Shortage Deduction', label: 'Shortage' }\n];\n\n// Build income rows HTML\nlet incomeRowsHTML = '';\nlet incomeCount = 0;\nincomeFields.forEach(field => {\n  const value = inputData[field.key];\n  if (hasValue(value)) {\n    incomeRowsHTML += `\n                    <div class=\"table-row\">\n                        <span class=\"table-label\">${field.label}</span>\n                        <span class=\"table-value\">Rp ${formatCurrency(value)}</span>\n                    </div>`;\n    incomeCount++;\n  }\n});\n\n// Build deduction rows HTML\nlet deductionRowsHTML = '';\nlet deductionCount = 0;\ndeductionFields.forEach(field => {\n  const value = inputData[field.key];\n  if (hasValue(value)) {\n    deductionRowsHTML += `\n                    <div class=\"table-row\">\n                        <span class=\"table-label\">${field.label}</span>\n                        <span class=\"table-value\">Rp ${formatCurrency(value)}</span>\n                    </div>`;\n    deductionCount++;\n  }\n});\n\n// Balance columns with invisible spacers\nconst diff = Math.abs(incomeCount - deductionCount);\nif (incomeCount > deductionCount) {\n  for (let i = 0; i < diff; i++) {\n    deductionRowsHTML += `\n                    <div class=\"table-row\" style=\"visibility: hidden;\">\n                        <span class=\"table-label\">&nbsp;</span>\n                        <span class=\"table-value\">&nbsp;</span>\n                    </div>`;\n  }\n} else if (deductionCount > incomeCount) {\n  for (let i = 0; i < diff; i++) {\n    incomeRowsHTML += `\n                    <div class=\"table-row\" style=\"visibility: hidden;\">\n                        <span class=\"table-label\">&nbsp;</span>\n                        <span class=\"table-value\">&nbsp;</span>\n                    </div>`;\n  }\n}\n\n// Function to convert number to Indonesian words\nfunction numberToWords(number) {\n  const ones = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan'];\n  const teens = ['Sepuluh', 'Sebelas', 'Dua Belas', 'Tiga Belas', 'Empat Belas', 'Lima Belas', 'Enam Belas', 'Tujuh Belas', 'Delapan Belas', 'Sembilan Belas'];\n  const tens = ['', '', 'Dua Puluh', 'Tiga Puluh', 'Empat Puluh', 'Lima Puluh', 'Enam Puluh', 'Tujuh Puluh', 'Delapan Puluh', 'Sembilan Puluh'];\n  \n  if (number === 0) return 'Nol';\n  \n  function convertLessThanThousand(n) {\n    if (n === 0) return '';\n    if (n < 10) return ones[n];\n    if (n < 20) return teens[n - 10];\n    if (n < 100) {\n      const ten = Math.floor(n / 10);\n      const one = n % 10;\n      return tens[ten] + (one ? ' ' + ones[one] : '');\n    }\n    const hundred = Math.floor(n / 100);\n    const rest = n % 100;\n    return (hundred === 1 ? 'Seratus' : ones[hundred] + ' Ratus') + (rest ? ' ' + convertLessThanThousand(rest) : '');\n  }\n  \n  if (number < 1000) return convertLessThanThousand(number);\n  if (number < 1000000) {\n    const thousand = Math.floor(number / 1000);\n    const rest = number % 1000;\n    return (thousand === 1 ? 'Seribu' : convertLessThanThousand(thousand) + ' Ribu') + (rest ? ' ' + convertLessThanThousand(rest) : '');\n  }\n  if (number < 1000000000) {\n    const million = Math.floor(number / 1000000);\n    const rest = number % 1000000;\n    let result = convertLessThanThousand(million) + ' Juta';\n    if (rest >= 1000) {\n      const thousand = Math.floor(rest / 1000);\n      const restRest = rest % 1000;\n      result += ' ' + (thousand === 1 ? 'Seribu' : convertLessThanThousand(thousand) + ' Ribu');\n      if (restRest) result += ' ' + convertLessThanThousand(restRest);\n    } else if (rest) {\n      result += ' ' + convertLessThanThousand(rest);\n    }\n    return result;\n  }\n  return number.toString();\n}\n\n// Generate terbilang - FIXED\nconst thpTerbilang = numberToWords(inputData['THP']);\n\n// Return prepared data with config merged - FIXED\nreturn [{\n  json: {\n    ...inputData,\n    ...config,\n    incomeRowsHTML,\n    deductionRowsHTML,\n    totalIncomeFormatted: formatCurrency(inputData['Total Income']),\n    totalDeductionsFormatted: formatCurrency(inputData['Total Deduction']),\n    thpFormatted: formatCurrency(inputData['THP']),\n    thpTerbilang\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1456, 288],
+      "id": "750961aa-cf88-4c19-b510-cfac9769be1f",
+      "name": "Prepare Payslip Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bddd1f0c-51c2-4dd9-90cd-e04c8882918c",
+              "leftValue": "={{ $json[\"Is Email Sent\"] }}",
+              "rightValue": "no",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [-1904, 368],
+      "id": "2e0c5829-2360-43d4-a527-a2518d75ff22",
+      "name": "Check Email Not Sent"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Payslip</title>\n<style>\n:root{--primary-color:#07779d;--primary-color-light:#0a95c4;--color-text:#2c3e50;--color-border:#e0e6ed;--color-bg-light:#f8fafc}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;padding:20px;line-height:1.4}.payslip-container{max-width:900px;margin:0 auto;background:white;box-shadow:0 2px 8px rgba(0,0,0,0.1)}.header{padding:30px 40px;border-bottom:3px solid var(--primary-color)}.company-info{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0}.company-left{display:flex;flex-direction:column}.company-logo{font-size:28px;font-weight:700;color:var(--primary-color);margin-bottom:10px;letter-spacing:1px}.company-address{font-size:11px;color:#666;line-height:1.6;max-width:250px}.document-title{text-align:right}.document-title h1{font-size:24px;font-weight:700;color:var(--primary-color);margin-bottom:5px}.document-title .confidential{font-size:11px;color:#999;font-weight:500;text-transform:uppercase}.content{padding:30px 40px}.employee-info{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:20px;background:var(--color-bg-light);border-radius:8px;margin-bottom:30px}.info-item{font-size:12px}.info-label{font-weight:600;color:#666;margin-bottom:4px}.info-value{font-weight:500;color:var(--color-text)}.section-header{background:var(--primary-color);color:white;padding:12px 20px;font-size:13px;font-weight:600;text-transform:uppercase;margin-top:25px;margin-bottom:0;display:flex;justify-content:space-between;align-items:center}.section-period{font-size:12px;font-weight:500;opacity:0.95}.thp-section{display:grid;grid-template-columns:1fr 1fr;gap:0}.income-column,.deduction-column{border:1px solid var(--color-border);border-top:none}.column-header{background:var(--color-bg-light);padding:10px 20px;font-size:12px;font-weight:600;color:var(--color-text);border-bottom:2px solid var(--color-border)}.table-row{display:flex;justify-content:space-between;padding:10px 20px;font-size:12px;border-bottom:1px solid var(--color-border)}.table-row:last-child{border-bottom:none}.table-label{color:#555}.table-value{font-weight:600;color:var(--color-text)}.total-row{background:var(--color-bg-light);font-weight:700;color:var(--primary-color)}.payment-section{margin-top:0px;border:1px solid var(--color-border);border-top:none}.payment-grid{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:0}.payment-cell{padding:10px 15px;font-size:11px;border-right:1px solid var(--color-border);border-bottom:1px solid var(--color-border)}.payment-cell:nth-child(5n){border-right:none}.payment-header{background:var(--color-bg-light);font-weight:600;color:#666}.payment-value{font-weight:500;color:var(--color-text)}.thp-summary{background:linear-gradient(135deg,var(--primary-color) 0%,var(--primary-color-light) 100%);color:white;padding:20px;margin-top:25px;border-radius:8px}.thp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.thp-row:last-child{margin-bottom:0}.thp-label{font-size:14px;font-weight:600}.thp-value{font-size:24px;font-weight:700}.thp-words{font-size:11px;opacity:0.9}.thp-date{font-size:11px;opacity:0.9}.footer{padding:20px 40px;border-top:2px solid var(--color-border);text-align:center;font-size:10px;color:#999;line-height:1.6}.footer-note{margin-bottom:8px}@media print{body{background:white;padding:0}.payslip-container{box-shadow:none}}@media (max-width:768px){.employee-info{grid-template-columns:1fr;gap:15px}.thp-section{grid-template-columns:1fr}.payment-grid{grid-template-columns:1fr}.payment-cell{border-right:none}.content{padding:20px}}\n</style>\n</head>\n<body>\n<div class=\"payslip-container\">\n<div class=\"header\">\n<div class=\"company-info\">\n<div class=\"company-left\">\n<div class=\"company-logo\">{{$json[\"companyName\"]}}</div>\n<div class=\"company-address\">{{$json[\"companyAddress\"]}}</div>\n</div>\n<div class=\"document-title\">\n<h1>EMPLOYEE PAYSLIP</h1>\n<div class=\"confidential\">CONFIDENTIAL DOCUMENT</div>\n</div>\n</div>\n</div>\n<div class=\"content\">\n<div class=\"employee-info\">\n<div class=\"info-item\"><div class=\"info-label\">Name</div><div class=\"info-value\">{{$json[\"Employee Name\"]}}</div></div>\n<div class=\"info-item\"><div class=\"info-label\">Position</div><div class=\"info-value\">{{$json[\"Position\"]}}</div></div>\n<div class=\"info-item\"><div class=\"info-label\">Branch</div><div class=\"info-value\">{{$json[\"Branch\"]}}</div></div>\n<div class=\"info-item\"><div class=\"info-label\">Total Working Days</div><div class=\"info-value\">{{$json[\"Total Working Days\"]}} Days</div></div>\n<div class=\"info-item\"><div class=\"info-label\">{{$json[\"bankAccountLabel\"]}}</div><div class=\"info-value\">{{$json[\"Bank Account\"]}}</div></div>\n<div class=\"info-item\"><div class=\"info-label\">Period</div><div class=\"info-value\">{{$json[\"payrollMonth\"]}}</div></div>\n</div>\n<div class=\"section-header\"><span>TAKE HOME PAY COMPONENTS</span><span class=\"section-period\">REGULAR SALARY - {{$json[\"payrollMonthShort\"]}}</span></div>\n<div class=\"thp-section\">\n<div class=\"income-column\">\n<div class=\"column-header\">Income</div>\n{{$json[\"incomeRowsHTML\"]}}\n<div class=\"table-row total-row\"><span class=\"table-label\">Total Income</span><span class=\"table-value\">Rp {{$json[\"totalIncomeFormatted\"]}}</span></div>\n</div>\n<div class=\"deduction-column\">\n<div class=\"column-header\">Deductions</div>\n{{$json[\"deductionRowsHTML\"]}}\n<div class=\"table-row total-row\"><span class=\"table-label\">Total Deductions</span><span class=\"table-value\">Rp {{$json[\"totalDeductionsFormatted\"]}}</span></div>\n</div>\n</div>\n<div class=\"section-header\"><span>PAYMENT</span></div>\n<div class=\"payment-section\">\n<div class=\"payment-grid\">\n<div class=\"payment-cell payment-header\">Method</div>\n<div class=\"payment-cell payment-header\">Bank</div>\n<div class=\"payment-cell payment-header\">Account Details</div>\n<div class=\"payment-cell payment-header\">Currency</div>\n<div class=\"payment-cell payment-header\">Amount</div>\n<div class=\"payment-cell payment-value\">Transfer</div>\n<div class=\"payment-cell payment-value\">{{$json[\"bankName\"]}}</div>\n<div class=\"payment-cell payment-value\">{{$json[\"Bank Account\"]}} - {{$json[\"Employee Name\"]}}</div>\n<div class=\"payment-cell payment-value\">IDR</div>\n<div class=\"payment-cell payment-value\">{{$json[\"thpFormatted\"]}}</div>\n</div>\n</div>\n<div class=\"thp-summary\">\n<div class=\"thp-row\"><span class=\"thp-label\">Take Home Pay</span><span class=\"thp-value\">IDR {{$json[\"thpFormatted\"]}}</span></div>\n<div class=\"thp-row\"><span class=\"thp-words\">In Words: {{$json[\"thpTerbilang\"]}} Rupiah</span></div>\n<div class=\"thp-row\"><span class=\"thp-date\">Payment Date: {{$json[\"paymentDate\"]}}</span></div>\n</div>\n</div>\n<div class=\"footer\">\n<div class=\"footer-note\">This payslip is private and confidential.</div>\n<div class=\"footer-note\">This is a computer-generated information document. Please contact the payroll department for further inquiries.</div>\n<div class=\"footer-note\">Page 1 of 1</div>\n</div>\n</div>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [-1232, 288],
+      "id": "4482e304-38a7-40e1-a826-9af818a95f67",
+      "name": "Generate Payslip HTML"
+    },
+    {
+      "parameters": {
+        "operation": "runCustomScript",
+        "scriptCode": "=const html = $json.html\nawait $page.setContent(html, { waitUntil: 'networkidle0' });\n\nconst pdfArray = await $page.pdf({\n  format: 'A4',\n  printBackground: true,\n  margin: {\n    top: '10mm',\n    right: '10mm',\n    bottom: '10mm',\n    left: '10mm'\n  },\n  scale: 0.8\n});\n\nconst pdfBuffer = Buffer.from(pdfArray);\nconst pdfBase64 = pdfBuffer.toString('base64');\nreturn [{ json: { pdfBase64 } }];",
+        "options": {}
+      },
+      "type": "n8n-nodes-puppeteer.puppeteer",
+      "typeVersion": 1,
+      "position": [-1008, 288],
+      "id": "53df5b3b-2bb1-4db0-a051-fd4325ded35b",
+      "name": "Generate Payslip PDF"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "pdfBase64",
+        "options": {
+          "fileName": "=Payslip - {{ $('Prepare Payslip Data').item.json['Employee Name'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [-784, 288],
+      "id": "2df79e27-95c0-457e-bc29-e3e97ce20aca",
+      "name": "Create PDF File"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Prepare Payslip Data').item.json.Email }}",
+        "subject": "=Payslip {{ $('Prepare Payslip Data').item.json['Employee Name'] }}",
+        "emailType": "text",
+        "message": "=Hello {{ $('Prepare Payslip Data').item.json['Employee Name'] }},\n\nYour payslip for this month is ready. Please download the attached file.\n\nBest regards,\nPayroll Team",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [{}]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-560, 288],
+      "id": "5f081a5d-2db0-4336-a936-9982bd41f0e0",
+      "name": "Send Payslip Email",
+      "webhookId": "e77852a1-96a4-4a96-848d-3cd545ab8583",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XeLaofMkprEVVUZr",
+          "name": "notif-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1_I1INAiK_z0tH99tY7ewatA-aYWHj1-A0NJzHneM2m8",
+          "mode": "list",
+          "cachedResultName": "Gaji Final Cleaned",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_I1INAiK_z0tH99tY7ewatA-aYWHj1-A0NJzHneM2m8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Bank Account": "={{ $('Prepare Payslip Data').item.json['Bank Account'] }}",
+            "Is Email Sent": "yes"
+          },
+          "matchingColumns": ["Bank Account"]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-352, 288],
+      "id": "42f8dc37-3f3f-4cf9-8adc-944164ed425d",
+      "name": "Mark Email Sent in Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🔐 REQUIRED CREDENTIALS\n\n### 1. Google Sheets OAuth2 API (for self-jost)\n- **Where to get:** Google Cloud Console\n- **Required for:** Reading payroll data & updating status\n- **Permissions needed:** \n  - Read Google Sheets\n  - Write/Update Google Sheets\n\n**Setup Steps:**\n1. Go to Google Cloud Console\n2. Create/Select project\n3. Enable Google Sheets API\n4. Create OAuth 2.0 credentials\n5. Add authorized redirect URIs for n8n\n6. Configure in n8n: Settings → Credentials → Google Sheets OAuth2\n\n### 2. Gmail OAuth2 API\n- **Where to get:** Same Google Cloud project\n- **Required for:** Sending payslip emails\n- **Permissions needed:**\n  - Send emails via Gmail\n\n**Setup Steps:**\n1. In same Google Cloud project\n2. Enable Gmail API\n3. Use same OAuth 2.0 credentials OR create new one\n4. Configure in n8n: Settings → Credentials → Gmail OAuth2\n\n",
+        "height": 448,
+        "width": 496,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1936, 528],
+      "typeVersion": 1,
+      "id": "28642d8e-dcff-4bac-be8d-79f61e49310c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 📋 WORKFLOW OVERVIEW\n\n**Purpose:** Automatically generate personalized payslip PDFs from Google Sheets data and email them to employees\n\n**Flow Summary:**\n1. Configure company details\n2. Fetch payroll data from Google Sheets\n3. Filter unsent payslips\n4. Generate PDF for each employee\n5. Email PDF to employee\n6. Mark as sent in spreadsheet\n\n---\n\n**Connect with the creator:**\n\n[Portfolio](https://khmuhtadin.com) • [Workflows](https://khaisa.studio/products/) • [LinkedIn](https://www.linkedin.com/in/khmuhtadin/) • [Medium](https://medium.com/@khaisastudio) • [Threads](https://www.threads.com/@khmuhtadin)\n\n[Buy Me a Coffee](https://paypal.me/khmuhtadin)",
+        "height": 352,
+        "width": 576,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-2560, 528],
+      "typeVersion": 1,
+      "id": "cb040c93-1945-4be2-a9c3-13f38ae5d5dd",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ CONFIGURATION SECTION\n\n### Company Configuration Node\n**Purpose:** Centralized company settings for payslip template\n\n**Configurable Fields:**\n```\n- companyName: \"Khaisa Studio\"\n- companyAddress: \"Company Address Line 1,<br>City, State, Country\"\n- payrollMonth: \"October 2025\"\n- payrollMonthShort: \"Oct 2025\"\n- paymentDate: \"October 25, 2025\"\n- bankName: \"Bank\"\n- bankAccountLabel: \"Bank Account Number\"\n```\n\n**How to Update:**\n1. Open \"Company Configuration\" node\n2. Modify values in assignments\n3. Save workflow\n\n---\n",
+        "height": 448,
+        "width": 512,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1408, 528],
+      "typeVersion": 1,
+      "id": "db9843d7-7562-4554-a05c-595a4c8aeea7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "\n## 📊 DATA SOURCE SECTION\n\n### Fetch Payroll Data (Google Sheets)\n**Purpose:** Read employee payroll data\n\n**Required Sheet Structure:**\n```\nColumns needed:\n- Employee Name\n- Email\n- Position\n- Branch\n- Bank Account\n- Total Working Days\n- Basic Salary\n- Position Allowance\n- Performance Allowance\n- Shift/Extended\n- Other Allowance\n- Meal Allowance\n- Overtime\n- Arrears\n- Resignation Compensation\n- Employee Insurance Deduction\n- Health Insurance Deduction\n- Penalty Deduction\n- Uniform Deduction\n- Shortage Deduction\n- Total Income\n- Total Deduction\n- THP (Take Home Pay)\n- Is Email Sent (must be \"no\" or \"yes\")\n```\n\n---\n\n## 🔄 PROCESSING LOGIC SECTION\n\n### Check Email Not Sent (Filter)\n**Purpose:** Only process employees who haven't received payslip yet\n\n**Logic:** \n- Filters rows where `Is Email Sent` = \"no\"\n- Prevents duplicate emails\n\n### Iterate Payslip Rows (Split in Batches)\n**Purpose:** Process one employee at a time\n\n**Behavior:**\n- Loops through filtered data\n- Processes sequentially\n- Returns to loop after updating sheet\n\n---",
+        "height": 448,
+        "width": 512,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-864, 528],
+      "typeVersion": 1,
+      "id": "052fe0ea-ab42-4326-8f6a-c5ada8c5d292",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 🎨 PDF GENERATION SECTION\n\n### Prepare Payslip Data (Code Node)\n**Purpose:** Process raw data into formatted payslip content\n\n**Key Functions:**\n1. Format currency (Indonesian format)\n2. Generate dynamic income/deduction rows (only shows non-zero values)\n3. Balance column heights with invisible spacers\n4. Convert THP amount to Indonesian words (terbilang)\n5. Merge company config with employee data\n\n### Generate Payslip HTML (HTML Node)\n**Purpose:** Create styled HTML payslip\n\n**Features:**\n- Professional design with company branding\n- Responsive layout\n- Print-ready styling\n- Dynamic content injection\n\n### Generate Payslip PDF (Puppeteer)\n**Purpose:** Convert HTML to PDF\n\n**Settings:**\n- Format: A4\n- Print Background: Enabled\n- Margins: 10mm all sides\n- Scale: 0.8\n\n### Create PDF File (Convert to File)\n**Purpose:** Convert base64 PDF to binary attachment\n\n**Filename Format:** `Payslip - [Employee Name]`\n\n---\n\n## 📧 EMAIL DELIVERY SECTION\n\n### Send Payslip Email (Gmail)\n**Purpose:** Email PDF payslip to employee\n\n**Configuration:**\n- **To:** Employee email from spreadsheet\n- **Subject:** \"Payslip [Employee Name]\"\n- **Body:** Simple message with attachment\n- **Attachment:** PDF payslip\n\n**Email Template:**\n```\nHello [Employee Name],\n\nYour payslip for this month is ready. Please download the attached file.\n\nBest regards,\nPayroll Team\n```\n\n---\n\n## ✅ STATUS UPDATE SECTION\n\n### Mark Email Sent in Sheet (Google Sheets Update)\n**Purpose:** Update spreadsheet to prevent duplicate sends\n\n**Logic:**\n1. Finds row by Bank Account number (unique identifier)\n2. Updates `Is Email Sent` column to \"yes\"\n3. Loops back to process next employee\n\n---\n\n## 🚀 HOW TO RUN\n\n### Manual Execution:\n1. Click \"Manual Trigger\" node\n2. Click \"Test workflow\" button\n3. Monitor execution in real-time\n\n### Scheduled Execution (Optional):\n1. Replace \"Manual Trigger\" with \"Schedule Trigger\"\n2. Set cron schedule (e.g., monthly on 25th)\n3. Activate workflow\n\n---\n",
+        "height": 448,
+        "width": 512,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-320, 528],
+      "typeVersion": 1,
+      "id": "fdab71ad-e026-43e6-ade7-0ea39e2dffdd",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ IMPORTANT NOTES\n\n### Before First Run:\n1. ✅ Configure both credentials (Google Sheets + Gmail)\n2. ✅ Update Company Configuration values\n3. ✅ Ensure spreadsheet has all required columns\n4. ✅ Set \"Is Email Sent\" to \"no\" for test rows\n5. ✅ Verify email addresses are valid",
+        "height": 80,
+        "width": 576,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-2560, 896],
+      "typeVersion": 1,
+      "id": "79284cac-77fd-4bbc-9db8-390b26d9584f",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "![Payslip](https://raw.githubusercontent.com/khmuhtadin/n8n-template/main/Business/HR/PaySlip/Payslip.png)\n",
+        "height": 1072,
+        "width": 800,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-3424, -80],
+      "id": "175f2dfd-c839-48b9-8ce3-d4e705eade39",
+      "name": "Sticky Note6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Company Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company Configuration": {
+      "main": [
+        [
+          {
+            "node": "Fetch Payroll Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Payroll Data": {
+      "main": [
+        [
+          {
+            "node": "Check Email Not Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Iterate Payslip Rows": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Prepare Payslip Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Payslip Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Payslip HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Email Not Sent": {
+      "main": [
+        [
+          {
+            "node": "Iterate Payslip Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Payslip HTML": {
+      "main": [
+        [
+          {
+            "node": "Generate Payslip PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Payslip PDF": {
+      "main": [
+        [
+          {
+            "node": "Create PDF File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create PDF File": {
+      "main": [
+        [
+          {
+            "node": "Send Payslip Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Payslip Email": {
+      "main": [
+        [
+          {
+            "node": "Mark Email Sent in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Email Sent in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Iterate Payslip Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "42dff9cd-0477-4e64-9a15-5ecbb257c8a1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "a6j2K4btAzegz8SD",
+  "tags": []
+}
