@@ -1,0 +1,448 @@
+{
+  "name": "Khaisa Domain Sniper - RDAP .my Domain Availability Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "**Endpoint**: https://rdap.mynic.my/rdap/domain/{domain}\n\n**Available Domain Response**:\n- `description[0]`: \"is available for registration\"\n- `description[1]`: Link to registrar list\n\n**Registered Domain Response**:\n- Contains details: registrant, nameservers, status\n\n⚠️ **No API Key Required** - Public API",
+        "height": 448,
+        "width": 336,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        112,
+        -384
+      ],
+      "typeVersion": 1,
+      "id": "74edd14d-00bb-4d8e-a326-17ba6fd7e0c8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "ca3aff64-ad43-40df-b210-3ba09050a716",
+              "leftValue": "={{ $json.description[0] }}",
+              "rightValue": "is available for registration",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5b9da171-6f28-408a-aa90-f4cc79d0dae3",
+      "name": "Domain Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        528,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1fuwRDUJEqF5nOLu_w5Iq-UbepU7uW2tWYtk2j_iAHe4",
+          "mode": "list",
+          "cachedResultName": "Domain Target",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fuwRDUJEqF5nOLu_w5Iq-UbepU7uW2tWYtk2j_iAHe4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fuwRDUJEqF5nOLu_w5Iq-UbepU7uW2tWYtk2j_iAHe4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Domain": "={{ $('Loop Through Domains').item.json.Domain }}",
+            "isAvailable": "yes"
+          },
+          "matchingColumns": [
+            "Domain"
+          ],
+          "schema": [
+            {
+              "id": "Domain",
+              "displayName": "Domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "isAvailable",
+              "displayName": "isAvailable",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1152,
+        -208
+      ],
+      "id": "febe7d9c-f8f2-4f88-aca0-8c8aabf9265e",
+      "name": "Update Sheet: Mark Available",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        -80
+      ],
+      "id": "f2bc9c1e-e8cd-47ad-ac33-826dacb77717",
+      "name": "Wait 10 Seconds",
+      "webhookId": "4688cb19-d868-4a73-a96e-eb1a31293f26"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "a7163e06-eaea-480d-bd15-9fc81fa928ec",
+      "name": "Schedule: Every 30 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1fuwRDUJEqF5nOLu_w5Iq-UbepU7uW2tWYtk2j_iAHe4",
+          "mode": "list",
+          "cachedResultName": "Domain Target",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fuwRDUJEqF5nOLu_w5Iq-UbepU7uW2tWYtk2j_iAHe4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fuwRDUJEqF5nOLu_w5Iq-UbepU7uW2tWYtk2j_iAHe4/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "isAvailable",
+              "lookupValue": "no"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -256,
+        -112
+      ],
+      "id": "17f133d9-cde8-4271-86cf-59dcadfb69ae",
+      "name": "Fetch Target Domains from Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gnUSHhCw4cKx3pwo",
+          "name": "Project GCP: n8n-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -32,
+        -112
+      ],
+      "id": "c5f6224f-92ec-4b14-9ba2-4920ae62235d",
+      "name": "Loop Through Domains"
+    },
+    {
+      "parameters": {
+        "url": "=https://rdap.mynic.my/rdap/domain/{{ $json.Domain }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        -96
+      ],
+      "id": "628d1b41-2982-4a97-a955-ed7227d41d9a",
+      "name": "RDAP: Check Domain Status"
+    },
+    {
+      "parameters": {
+        "sendTo": "contact@khmuhtadin.com",
+        "subject": "=Sniper Report! {{ $('Loop Through Domains').item.json.Domain }} is Available ",
+        "message": "=<div style=\"font-family: 'Courier New', Courier, monospace; max-width: 500px; margin: 20px auto; background-color: #ffffff; border: 4px solid #000000; box-shadow: 10px 10px 0px #000000;\">\n  \n  <div style=\"background-color: #10b981; padding: 20px; border-bottom: 4px solid #000000;\">\n    <div style=\"font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;\">\n      [ SYSTEM ACCESS / V1.0 ]\n    </div>\n    <h1 style=\"margin: 0; font-size: 38px; font-weight: 900; text-transform: uppercase; line-height: 1;\">DOMAIN<br>TERSEDIA</h1>\n  </div>\n\n  <div style=\"padding: 30px;\">\n    \n    <div style=\"border: 3px solid #000000; padding: 20px; background-color: #f0f0f0; margin-bottom: 25px;\">\n      <div style=\"font-size: 12px; font-weight: bold; color: #10b981; margin-bottom: 5px;\">> STATUS: TERSEDIA</div>\n      <div style=\"font-size: 24px; font-weight: 900; word-break: break-all; color: #000000;\">\n        berjayasaja.my\n      </div>\n    </div>\n\n    <div style=\"text-align: center; margin-bottom: 25px;\">\n      <a href=\"https://rdap.mynicregistry.my/registrars/\" \n         style=\"display: block; background-color: #000000; color: #ffffff; padding: 18px; text-decoration: none; font-weight: bold; font-size: 18px; border: none; text-transform: uppercase; letter-spacing: 1px;\">\n        DAFTAR SEKARANG >\n      </a>\n    </div>\n\n    <div style=\"border: 2px dashed #000000; padding: 15px; background-color: #fffbeb;\">\n      <p style=\"margin: 0; font-size: 13px; font-weight: bold; line-height: 1.5;\">\n        PERINGATAN: Domain ini boleh didaftarkan oleh sesiapa sahaja. Sila bertindak segera sebelum terlepas.\n      </p>\n    </div>\n\n  </div>\n\n  <div style=\"padding: 20px; border-top: 4px solid #000000; background-color: #fafafa; font-size: 11px; font-weight: bold;\">\n    <div style=\"display: flex; justify-content: space-between;\">\n      <span>SEMAKAN: {{ $now.format('DD HH:mm:ss') }}</span>\n      <span style=\"text-align: right;\">V0.8.2-STABLE</span>\n    </div>\n    <div style=\"margin-top: 10px; text-align: center; border-top: 1px solid #000000; padding-top: 10px;\">\n      KHAISA DOMAIN SNIPER // <a href=\"https://khmuhtadin.com\" style=\"color: #000000; text-decoration: underline;\">KHMUHTADIN.COM</a>\n    </div>\n  </div>\n\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        704,
+        -208
+      ],
+      "id": "ec96b939-891c-4af1-9b10-681c1a340b98",
+      "name": "Gmail: Send Availability Alert",
+      "webhookId": "83f33173-d1d1-4422-93b7-125b83be957f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XeLaofMkprEVVUZr",
+          "name": "notif-khmuhtadin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "924339263372406844",
+          "mode": "list",
+          "cachedResultName": "Khaisa Studio",
+          "cachedResultUrl": "https://discord.com/channels/924339263372406844"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1426866916009705613",
+          "mode": "list",
+          "cachedResultName": "notification",
+          "cachedResultUrl": "https://discord.com/channels/924339263372406844/1426866916009705613"
+        },
+        "content": "={{ $('Loop Through Domains').item.json.Domain }} is available to buy!",
+        "options": {},
+        "embeds": {
+          "values": [
+            {
+              "author": "Grab Now",
+              "title": "={{ $('Domain Available?').item.json.description[1].match(/https?:\\/\\/[^\\s\\)]+/)[0] }}",
+              "url": "="
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -208
+      ],
+      "id": "f87af0c7-abd5-4910-9c71-c9510096d6ad",
+      "name": "Discord: Notify Available Domain",
+      "webhookId": "1e7ca7c0-6501-440c-86e7-79d122cffdd3",
+      "credentials": {
+        "discordBotApi": {
+          "id": "dJMKbc7ZDni2mvkT",
+          "name": "Khaisa-n8n-bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## RDAP .my Domain Availability Monitor\n\n### How it works\n1. A scheduled trigger runs (default every 30 minutes) and fetches target domains from a Google Sheet where isAvailable = no. \n2. The workflow loops through each domain and calls the MY NIC RDAP endpoint to check status.\n3. If RDAP returns “is available for registration”, the workflow sends an email alert and posts a Discord notification.\n4. After notifications, the sheet row is updated to mark the domain as available.\n5. A short wait between actions prevents rate issues and continues the loop.\n\n### Setup\n- [ ] Connect Google Sheets and select the target spreadsheet and sheet.\n- [ ] Populate the sheet with a Domain column and set isAvailable = no for targets.\n- [ ] Connect Gmail for sending availability alerts.\n- [ ] Connect Discord bot or webhook and choose the notification channel.\n- [ ] Confirm the schedule interval (every 30 minutes by default).\n- [ ] Run a test domain to verify RDAP responses and end-to-end alerts.",
+        "height": 750,
+        "width": 500
+      },
+      "id": "84922f38-278b-4bdf-b5f0-67bf784e1106",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        -688
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Domain Available?": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Availability Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet: Mark Available": {
+      "main": [
+        [
+          {
+            "node": "Wait 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 10 Seconds": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Domains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule: Every 30 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Target Domains from Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Target Domains from Sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Domains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Through Domains": {
+      "main": [
+        [],
+        [
+          {
+            "node": "RDAP: Check Domain Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RDAP: Check Domain Status": {
+      "main": [
+        [
+          {
+            "node": "Domain Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Send Availability Alert": {
+      "main": [
+        [
+          {
+            "node": "Discord: Notify Available Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Notify Available Domain": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet: Mark Available",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "2bc1a48c-86d4-4bd6-8363-0dc315575bc7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
+  },
+  "id": "ADApialiNOkbU9y4",
+  "tags": []
+}
