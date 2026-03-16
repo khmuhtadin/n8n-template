@@ -21,10 +21,7 @@
       "name": "Retrieve Parsed Content",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        848,
-        -128
-      ],
+      "position": [848, -128],
       "credentials": {
         "httpHeaderAuth": {
           "id": "4hJbMGqzerAxpVEw",
@@ -44,10 +41,7 @@
       "name": "Receive Upload Request",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [
-        -1280,
-        -144
-      ],
+      "position": [-1280, -144],
       "onError": "continueRegularOutput"
     },
     {
@@ -58,10 +52,7 @@
       "name": "Split Uploaded Files + Build Deal ID",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -1056,
-        -144
-      ]
+      "position": [-1056, -144]
     },
     {
       "parameters": {
@@ -71,10 +62,7 @@
       "name": "Iterate Files for Parsing",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [
-        -128,
-        -128
-      ]
+      "position": [-128, -128]
     },
     {
       "parameters": {
@@ -104,10 +92,7 @@
       "name": "Get Pinecone Index Stats",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        -832,
-        -144
-      ],
+      "position": [-832, -144],
       "retryOnFail": true,
       "waitBetweenTries": 2000,
       "credentials": {
@@ -136,10 +121,7 @@
       "name": "Upsert Chunks to Pinecone",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
-      "position": [
-        1232,
-        -128
-      ],
+      "position": [1232, -128],
       "credentials": {
         "pineconeApi": {
           "id": "IX4WqaNzLmXgybyA",
@@ -155,10 +137,7 @@
       "name": "Generate Embeddings (Ingest)",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
-      "position": [
-        1232,
-        -16
-      ],
+      "position": [1232, -16],
       "credentials": {
         "openAiApi": {
           "id": "hdBomZukFu3cyDUS",
@@ -197,10 +176,7 @@
       "name": "Prepare Parsed Text Document",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
-      "position": [
-        1424,
-        -16
-      ]
+      "position": [1424, -16]
     },
     {
       "parameters": {
@@ -217,10 +193,7 @@
       "name": "Collect Ingested Deal IDs",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [
-        64,
-        -624
-      ]
+      "position": [64, -624]
     },
     {
       "parameters": {
@@ -230,10 +203,7 @@
       "name": "Prepare Analysis Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -144,
-        -624
-      ]
+      "position": [-144, -624]
     },
     {
       "parameters": {
@@ -246,10 +216,7 @@
       "name": "Run Due Diligence AI Analysis",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [
-        3472,
-        -560
-      ]
+      "position": [3472, -560]
     },
     {
       "parameters": {
@@ -266,10 +233,7 @@
       "name": " OpenAI Chat Model (5-mini)",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [
-        3328,
-        -448
-      ],
+      "position": [3328, -448],
       "credentials": {
         "openAiApi": {
           "id": "hdBomZukFu3cyDUS",
@@ -285,10 +249,7 @@
       "name": "Parse Structured Analysis JSON",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
-      "position": [
-        3744,
-        -448
-      ]
+      "position": [3744, -448]
     },
     {
       "parameters": {
@@ -298,10 +259,7 @@
       "name": " Generate Embeddings (Retrieval)",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
-      "position": [
-        3568,
-        -352
-      ],
+      "position": [3568, -352],
       "credentials": {
         "openAiApi": {
           "id": "hdBomZukFu3cyDUS",
@@ -317,10 +275,7 @@
       "name": "Map Analysis to Report Fields",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        3952,
-        -512
-      ]
+      "position": [3952, -512]
     },
     {
       "parameters": {
@@ -330,10 +285,7 @@
       "name": "Render DD Report HTML",
       "type": "n8n-nodes-base.html",
       "typeVersion": 1.2,
-      "position": [
-        3584,
-        -208
-      ]
+      "position": [3584, -208]
     },
     {
       "parameters": {
@@ -345,10 +297,7 @@
       "name": "Render PDF from HTML",
       "type": "n8n-nodes-puppeteer.puppeteer",
       "typeVersion": 1,
-      "position": [
-        3808,
-        -208
-      ]
+      "position": [3808, -208]
     },
     {
       "parameters": {
@@ -362,10 +311,7 @@
       "name": "Convert PDF Base64 to Binary File",
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
-      "position": [
-        4032,
-        -208
-      ]
+      "position": [4032, -208]
     },
     {
       "parameters": {
@@ -378,10 +324,7 @@
       "name": "Upload Report PDF to S3",
       "type": "n8n-nodes-base.s3",
       "typeVersion": 1,
-      "position": [
-        4480,
-        -208
-      ],
+      "position": [4480, -208],
       "credentials": {
         "s3": {
           "id": "VlDlqmuisabClxpl",
@@ -397,10 +340,7 @@
       "name": "Build Public Report URL",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        4704,
-        -208
-      ]
+      "position": [4704, -208]
     },
     {
       "parameters": {
@@ -412,10 +352,7 @@
       "name": " Merge Analysis + Report URL",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [
-        4272,
-        -544
-      ]
+      "position": [4272, -544]
     },
     {
       "parameters": {
@@ -446,10 +383,7 @@
       "name": "Is Parsing Job Complete?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        464,
-        -112
-      ]
+      "position": [464, -112]
     },
     {
       "parameters": {
@@ -483,10 +417,7 @@
       "name": "Upload File to LlamaParse",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        96,
-        -112
-      ],
+      "position": [96, -112],
       "credentials": {
         "httpHeaderAuth": {
           "id": "4hJbMGqzerAxpVEw",
@@ -514,10 +445,7 @@
       "name": "Check LlamaParse Job Status",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        288,
-        -112
-      ],
+      "position": [288, -112],
       "credentials": {
         "httpHeaderAuth": {
           "id": "4hJbMGqzerAxpVEw",
@@ -534,10 +462,7 @@
       "name": "Wait 10s Before Recheck",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [
-        640,
-        -96
-      ]
+      "position": [640, -96]
     },
     {
       "parameters": {
@@ -547,10 +472,7 @@
       "name": "Return API Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [
-        4720,
-        -544
-      ]
+      "position": [4720, -544]
     },
     {
       "parameters": {
@@ -560,10 +482,7 @@
       "name": "Normalize Parsed Text Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1056,
-        -128
-      ]
+      "position": [1056, -128]
     },
     {
       "parameters": {
@@ -593,10 +512,7 @@
       "name": "Cache Hit?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        -384,
-        -144
-      ]
+      "position": [-384, -144]
     },
     {
       "parameters": {
@@ -606,10 +522,7 @@
       "name": "Prepare S3 File Metadata",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        4256,
-        -208
-      ]
+      "position": [4256, -208]
     },
     {
       "parameters": {
@@ -619,10 +532,7 @@
       "name": "Derive Company Seed",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        272,
-        -624
-      ]
+      "position": [272, -624]
     },
     {
       "parameters": {
@@ -632,10 +542,7 @@
       "name": "Build Domain Candidates",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        672,
-        -624
-      ]
+      "position": [672, -624]
     },
     {
       "parameters": {
@@ -645,10 +552,7 @@
       "name": "Iterate Domain Candidates",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [
-        864,
-        -624
-      ]
+      "position": [864, -624]
     },
     {
       "parameters": {
@@ -661,10 +565,7 @@
       "name": "Decodo Verify Official Domain",
       "type": "@decodo/n8n-nodes-decodo.decodo",
       "typeVersion": 1,
-      "position": [
-        1040,
-        -528
-      ],
+      "position": [1040, -528],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -684,10 +585,7 @@
       "name": "Score Domain Match",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1216,
-        -528
-      ]
+      "position": [1216, -528]
     },
     {
       "parameters": {
@@ -699,10 +597,7 @@
       "name": "Collect Domain Scores",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [
-        1040,
-        -688
-      ]
+      "position": [1040, -688]
     },
     {
       "parameters": {
@@ -712,10 +607,7 @@
       "name": "Select Canonical Domain",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1216,
-        -688
-      ]
+      "position": [1216, -688]
     },
     {
       "parameters": {
@@ -725,10 +617,7 @@
       "name": "Iterate Enrichment URLs",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [
-        1680,
-        -592
-      ]
+      "position": [1680, -592]
     },
     {
       "parameters": {
@@ -758,10 +647,7 @@
       "name": "Profile Page?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        1920,
-        -432
-      ]
+      "position": [1920, -432]
     },
     {
       "parameters": {
@@ -774,10 +660,7 @@
       "name": "Decodo Scrape Company Profile",
       "type": "@decodo/n8n-nodes-decodo.decodo",
       "typeVersion": 1,
-      "position": [
-        2112,
-        -448
-      ],
+      "position": [2112, -448],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -800,10 +683,7 @@
       "name": "Decodo Scrape Commercial and Risk",
       "type": "@decodo/n8n-nodes-decodo.decodo",
       "typeVersion": 1,
-      "position": [
-        2112,
-        -256
-      ],
+      "position": [2112, -256],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
@@ -823,10 +703,7 @@
       "name": "Normalize External Evidence",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2304,
-        -368
-      ]
+      "position": [2304, -368]
     },
     {
       "parameters": {
@@ -838,10 +715,7 @@
       "name": "Collect External Evidence",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [
-        1904,
-        -608
-      ]
+      "position": [1904, -608]
     },
     {
       "parameters": {
@@ -851,10 +725,7 @@
       "name": "Evidence Coverage Metrics",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2112,
-        -608
-      ]
+      "position": [2112, -608]
     },
     {
       "parameters": {
@@ -884,10 +755,7 @@
       "name": "Has External Evidence?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        2336,
-        -608
-      ]
+      "position": [2336, -608]
     },
     {
       "parameters": {
@@ -924,10 +792,7 @@
       "name": "Prepare External Evidence Document",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
-      "position": [
-        2800,
-        -512
-      ]
+      "position": [2800, -512]
     },
     {
       "parameters": {
@@ -937,10 +802,7 @@
       "name": "Generate Embeddings (External)",
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
-      "position": [
-        2608,
-        -512
-      ],
+      "position": [2608, -512],
       "credentials": {
         "openAiApi": {
           "id": "hdBomZukFu3cyDUS",
@@ -966,10 +828,7 @@
       "name": "Upsert External Evidence to Pinecone",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
-      "position": [
-        2608,
-        -624
-      ],
+      "position": [2608, -624],
       "credentials": {
         "pineconeApi": {
           "id": "IX4WqaNzLmXgybyA",
@@ -985,10 +844,7 @@
       "name": "Prepare AI Input with Evidence",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        3088,
-        -560
-      ]
+      "position": [3088, -560]
     },
     {
       "parameters": {
@@ -998,10 +854,7 @@
       "name": "Augment Report with Evidence",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        3360,
-        -208
-      ]
+      "position": [3360, -208]
     },
     {
       "parameters": {
@@ -1011,10 +864,7 @@
       "name": "Prepare API Response Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        4496,
-        -544
-      ]
+      "position": [4496, -544]
     },
     {
       "parameters": {
@@ -1034,10 +884,7 @@
       "name": "Pinecone Vector Store",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
-      "position": [
-        3456,
-        -448
-      ],
+      "position": [3456, -448],
       "credentials": {
         "pineconeApi": {
           "id": "IX4WqaNzLmXgybyA",
@@ -1053,10 +900,7 @@
       "name": "Check Deal Namespace Cache",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -608,
-        -144
-      ]
+      "position": [-608, -144]
     },
     {
       "parameters": {
@@ -1069,10 +913,7 @@
       "name": "Decodo Search Official Site",
       "type": "@decodo/n8n-nodes-decodo.decodo",
       "typeVersion": 1,
-      "position": [
-        464,
-        -624
-      ],
+      "position": [464, -624],
       "credentials": {
         "decodoApi": {
           "id": "um6rsqlbtrY3NRQB",
@@ -1109,10 +950,7 @@
       "name": "Canonical Domain Acceptable?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        1424,
-        -576
-      ]
+      "position": [1424, -576]
     },
     {
       "parameters": {
@@ -1123,10 +961,7 @@
       "id": "dabddbd9-abb7-4a16-be47-5dd4556f7b52",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -1888,
-        -944
-      ],
+      "position": [-1888, -944],
       "typeVersion": 1
     },
     {
@@ -1137,10 +972,7 @@
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -1344,
-        -288
-      ],
+      "position": [-1344, -288],
       "typeVersion": 1,
       "id": "07eba514-18bf-415d-b614-29ace85f506c",
       "name": "Sticky Note1"
@@ -1153,10 +985,7 @@
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -224,
-        -288
-      ],
+      "position": [-224, -288],
       "typeVersion": 1,
       "id": "12e033ad-8171-4ec2-bc4d-bec47b06191a",
       "name": "Sticky Note2"
@@ -1169,10 +998,7 @@
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -224,
-        -768
-      ],
+      "position": [-224, -768],
       "typeVersion": 1,
       "id": "bfc0f03b-fbfd-4cbe-86e8-0f05fcd886bd",
       "name": "Sticky Note3"
@@ -1185,10 +1011,7 @@
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        1584,
-        -720
-      ],
+      "position": [1584, -720],
       "typeVersion": 1,
       "id": "40b9aaf2-bd33-4822-9f67-c773e2ee1c79",
       "name": "Sticky Note4"
@@ -1201,10 +1024,7 @@
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        3280,
-        -720
-      ],
+      "position": [3280, -720],
       "typeVersion": 1,
       "id": "29be529a-b062-4fa6-be07-9ffe83d7a0ee",
       "name": "Sticky Note5"
@@ -1219,10 +1039,7 @@
       "id": "23cf1626-33c9-4c0e-9c52-eb80f2698355",
       "name": "Sticky Note6",
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -1344,
-        -944
-      ],
+      "position": [-1344, -944],
       "typeVersion": 1
     }
   ],
@@ -1928,18 +1745,5 @@
         ]
       ]
     }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
-  },
-  "versionId": "d83f939f-e7d4-43b3-a55d-ed4b46b488a9",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "c2650793f644091dc80fb900fe63448ad1f4b774008de9608064d67294f8307c"
-  },
-  "id": "k1hWnSIXx30a8yG9",
-  "tags": []
+  }
 }
